@@ -73,7 +73,7 @@ from PyQt5 import QtCore, QtWidgets
 
 logging.basicConfig(level=logging.INFO)
 
-URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E702')
 
 if len(sys.argv) > 1:
     URI = sys.argv[1]
