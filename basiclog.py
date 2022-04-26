@@ -68,7 +68,7 @@ class LoggingExample:
         self._cf.connection_lost.add_callback(self._connection_lost)
 
         # Initialize log variable
-        self.logs = np.zeros([100000, 9])
+        self.logs = np.zeros([100000, 1])
 
         print('Connecting to %s' % link_uri)
 
@@ -87,15 +87,15 @@ class LoggingExample:
 
         # The definition of the logconfig can be made before connecting
         self._lg_stab = LogConfig(name='Meas', period_in_ms=100)
-        self._lg_stab.add_variable('range.front')
-        self._lg_stab.add_variable('range.back')
-        self._lg_stab.add_variable('range.up')
-        self._lg_stab.add_variable('range.left')
-        self._lg_stab.add_variable('range.right')
-        self._lg_stab.add_variable('range.zrange')
+        # self._lg_stab.add_variable('range.front')
+        # self._lg_stab.add_variable('range.back')
+        # self._lg_stab.add_variable('range.up')
+        # self._lg_stab.add_variable('range.left')
+        # self._lg_stab.add_variable('range.right')
+        # self._lg_stab.add_variable('range.zrange')
         self._lg_stab.add_variable('stabilizer.roll')
-        self._lg_stab.add_variable('stabilizer.pitch')
-        self._lg_stab.add_variable('stabilizer.yaw')
+        # self._lg_stab.add_variable('stabilizer.pitch')
+        # self._lg_stab.add_variable('stabilizer.yaw')
 
         # Adding the configuration cannot be done until a Crazyflie is
         # connected, since we need to check that the variables we
