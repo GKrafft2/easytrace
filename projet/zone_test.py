@@ -30,53 +30,60 @@ landing = 0
 
 
 def move_box_limit(scf):
-    with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
-        body_x_cmd = 0.2
-        body_y_cmd = 0.2
-        max_vel = 0.2
-        middle_box = 0.2
-        i=0
+    with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
+        with PositionHlCommander(scf,
+                x=0.0, y=0.0, z=0.0,
+                default_velocity=0.2,
+                default_height=DEFAULT_HEIGHT,
+                controller=PositionHlCommander.CONTROLLER_MELLINGER) as pc:
+            body_x_cmd = 0.2
+            body_y_cmd = 0.2
+            max_vel = 0.2
+            middle_box = 0.2
+            i=0
 
-        while (1):
-            #if position_estimate[0] > BOX_LIMIT:
-            #    mc.start_back()
-            #elif position_estimate[0] < -BOX_LIMIT:
-            #    mc.start_forward()
+            while (1):
+                #if position_estimate[0] > BOX_LIMIT:
+                #    mc.start_back()
+                #elif position_estimate[0] < -BOX_LIMIT:
+                #    mc.start_forward()
 
-            # if position_estimate[0] > BOX_LIMIT:
-            #     body_x_cmd = -max_vel
-            # if position_estimate[0] < -BOX_LIMIT:
-            #     body_x_cmd = max_vel
-            # if position_estimate[1] > BOX_LIMIT:
-            #     body_y_cmd = -max_vel
-            # if position_estimate[1] < -BOX_LIMIT:
-            #     body_y_cmd = max_vel
+                # if position_estimate[0] > BOX_LIMIT:
+                #     body_x_cmd = -max_vel
+                # if position_estimate[0] < -BOX_LIMIT:
+                #     body_x_cmd = max_vel
+                # if position_estimate[1] > BOX_LIMIT:
+                #     body_y_cmd = -max_vel
+                # if position_estimate[1] < -BOX_LIMIT:
+                #     body_y_cmd = max_vel
 
-            if landing == 1:
-                print('landing')
-                #time.sleep(0.5)
-                #pc.go_to(position_estimate[0]+middle_box,position_estimate[1],DEFAULT_HEIGHT)
-                #mc.start_linear_motion(-body_x_cmd,-body_y_cmd, 0)#revient sur ses pas
-                if i == 0:
-                    mc.forward(middle_box)
+                if landing == 1:
+                    print('landing1')
+                    #time.sleep(0.5)
+                    pc.go_to(position_estimate[0]+middle_box,position_estimate[1],DEFAULT_HEIGHT)
+                    #mc.start_linear_motion(-body_x_cmd,-body_y_cmd, 0)#revient sur ses pas
+                    # if i == 0:
+                    #     mc.forward(middle_box)
+                    #     time.sleep(1)#laisse le temps de revenir sur la plateforme
+                    #     i+=1 
+                    # mc.start_linear_motion(0,body_y_cmd, 0)
+                    time.sleep(2)
+                else:
+                    # mc.start_linear_motion(body_x_cmd, 0, 0)
+                    pc.forward(1)
+
+                    
+                if landing >= 2:
+                    print('landing2')
+                    #time.sleep(0.5)
+                    pc.go_to(position_estimate[0],position_estimate[1]+middle_box,DEFAULT_HEIGHT)
+                    #mc.start_linear_motion(-body_x_cmd,-body_y_cmd, 0)#revient sur ses pas
+                    # mc.left(middle_box)
                     time.sleep(1)#laisse le temps de revenir sur la plateforme
-                mc.start_linear_motion(0,body_y_cmd, 0)
-                time.sleep(2)
-            else:
-                mc.start_linear_motion(body_x_cmd, 0, 0)
-
-                
-            if landing >= 2:
-                print('landing')
-                #time.sleep(0.5)
-                #pc.go_to(position_estimate[0],position_estimate[1]+middle_box,DEFAULT_HEIGHT)
-                #mc.start_linear_motion(-body_x_cmd,-body_y_cmd, 0)#revient sur ses pas
-                mc.left(middle_box)
-                time.sleep(1)#laisse le temps de revenir sur la plateforme
-                break#quitte le while donc atterit
+                    break # quitte le while donc atterit
 
 
-            time.sleep(0.1)
+                time.sleep(0.1)
 
 
 def move_linear_simple(scf):
@@ -103,6 +110,7 @@ def log_pos_callback(timestamp, data, logconf):
         position_estimate[1] = data['stateEstimate.y']
         print('boite')
         landing += 1 #le mode landing est activé -> sera utlisé dans move_box_limit
+        time.sleep(1)
 
 
 
