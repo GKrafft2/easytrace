@@ -8,6 +8,7 @@ from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.positioning.motion_commander import MotionCommander
+from cflib.positioning.position_hl_commander import PositionHlCommander
 from cflib.utils import uri_helper
 
 import numpy as np
@@ -25,14 +26,16 @@ position_estimate = [0, 0]
 
 zrange = np.zeros(5)
 print(zrange)
-landing = False
+landing = 0
 
 
 def move_box_limit(scf):
     with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
         body_x_cmd = 0.2
-        body_y_cmd = 0.0
+        body_y_cmd = 0.2
         max_vel = 0.2
+        middle_box = 0.2
+        i=0
 
         while (1):
             #if position_estimate[0] > BOX_LIMIT:
@@ -49,15 +52,29 @@ def move_box_limit(scf):
             # if position_estimate[1] < -BOX_LIMIT:
             #     body_y_cmd = max_vel
 
-            if landing:
+            if landing == 1:
                 print('landing')
                 #time.sleep(0.5)
-                mc.start_linear_motion(-body_x_cmd,-body_y_cmd, 0)#revient sur ses pas
+                #pc.go_to(position_estimate[0]+middle_box,position_estimate[1],DEFAULT_HEIGHT)
+                #mc.start_linear_motion(-body_x_cmd,-body_y_cmd, 0)#revient sur ses pas
+                if i == 0:
+                    mc.forward(middle_box)
+                    time.sleep(1)#laisse le temps de revenir sur la plateforme
+                mc.start_linear_motion(0,body_y_cmd, 0)
+                time.sleep(2)
+            else:
+                mc.start_linear_motion(body_x_cmd, 0, 0)
+
+                
+            if landing >= 2:
+                print('landing')
+                #time.sleep(0.5)
+                #pc.go_to(position_estimate[0],position_estimate[1]+middle_box,DEFAULT_HEIGHT)
+                #mc.start_linear_motion(-body_x_cmd,-body_y_cmd, 0)#revient sur ses pas
+                mc.left(middle_box)
                 time.sleep(1)#laisse le temps de revenir sur la plateforme
                 break#quitte le while donc atterit
 
-
-            mc.start_linear_motion(body_x_cmd, body_y_cmd, 0)
 
             time.sleep(0.1)
 
@@ -69,30 +86,31 @@ def take_off_simple(scf):
     ...
 
 def log_pos_callback(timestamp, data, logconf):
-    print(data)
+    #print(data)
     global position_estimate
     global zrange
     global landing
 
-    position_estimate[0] = data['stateEstimate.x']
-    position_estimate[1] = data['stateEstimate.y']
     if data['range.zrange'] > DEFAULT_HEIGHT*1000:
         zrange = np.append(zrange,data['range.zrange'])
         zrange = zrange[1:]
-        print(zrange)
+        #print(zrange)
 
     THRESH = 8
     moy = np.mean(zrange[:len(zrange) - 1])
     if moy > 295 and (zrange[len(zrange) - 1] < moy - THRESH or zrange[len(zrange) - 1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
+        position_estimate[0] = data['stateEstimate.x']
+        position_estimate[1] = data['stateEstimate.y']
         print('boite')
-        landing = True#le mode landing est activé -> sera utlisé dans move_box_limit
+        landing += 1 #le mode landing est activé -> sera utlisé dans move_box_limit
+
 
 
 
 
 def param_deck_flow(_, value_str):
     value = int(value_str)
-    print(value)
+    #print(value)
     if value:
         deck_attached_event.set()
         print('Deck is attached!')
