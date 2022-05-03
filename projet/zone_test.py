@@ -14,7 +14,7 @@ import numpy as np
 
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E702')
 
-DEFAULT_HEIGHT = 0.3
+DEFAULT_HEIGHT = 0.4
 BOX_LIMIT = 0.3
 
 deck_attached_event = Event()
@@ -30,34 +30,69 @@ landing = False
 
 def move_box_limit(scf):
     with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
+
+        time.sleep(1)
+
         body_x_cmd = 0.2
-        body_y_cmd = 0.0
+        body_y_cmd = 0.2
         max_vel = 0.2
+        error = 1
 
-        while (1):
-            #if position_estimate[0] > BOX_LIMIT:
-            #    mc.start_back()
-            #elif position_estimate[0] < -BOX_LIMIT:
-            #    mc.start_forward()
+        demi_boite = 0.15
 
-            # if position_estimate[0] > BOX_LIMIT:
-            #     body_x_cmd = -max_vel
-            # if position_estimate[0] < -BOX_LIMIT:
-            #     body_x_cmd = max_vel
-            # if position_estimate[1] > BOX_LIMIT:
-            #     body_y_cmd = -max_vel
-            # if position_estimate[1] < -BOX_LIMIT:
-            #     body_y_cmd = max_vel
+        fly = True
+        first_pass = True
 
+        while (fly):
+            print(f'x = {position_estimate[0]} y = {position_estimate[1]}')
+            print('dans while(fly)')
             if landing:
                 print('landing')
-                #time.sleep(0.5)
-                mc.start_linear_motion(-body_x_cmd,-body_y_cmd, 0)#revient sur ses pas
-                time.sleep(1)#laisse le temps de revenir sur la plateforme
-                break#quitte le while donc atterit
+                #screenshot de la pos au moment ou il detecte la boite
+                if first_pass:
+                    limit_x = position_estimate[0]
+                    limit_y = position_estimate[1]
 
+                    # on estime le centre de la box en fonction de la ou il detecte un edge et sa vitesse d'approche
+                    center_x = limit_x + np.sign(body_x_cmd) * demi_boite
+                    center_y = limit_y + np.sign(body_y_cmd) * demi_boite
 
-            mc.start_linear_motion(body_x_cmd, body_y_cmd, 0)
+                    print(f'pos boite = {center_x} y = {center_y}')
+                    first_pass = False
+
+                time.sleep(0.5)
+
+                print(f'error {error}')
+
+                # essaye de revenir au centre de la boite
+                if error > 0.05 :
+                    landing_speed = 0.1
+                    P = 5
+                    err_x = (position_estimate[0]-center_x)
+                    err_y = (position_estimate[1]-center_y)
+                    landing_speed_x = err_x * landing_speed * P
+                    landing_speed_y = err_y * landing_speed * P
+
+                   # eviter que les vitesses deviennent trop grandes marche pas psk on risque d avoir des vitesses negatives
+                    #if landing_speed_x > 0.2:
+                        #landing_speed_x = 0.2
+                    #if landing_speed_y > 0.2:
+                        #landing_speed_y = 0.2
+                    print(landing_speed_x, landing_speed_y)
+
+                    mc.start_linear_motion(landing_speed_x,landing_speed_y, 0)
+                    error = np.sqrt(err_x**2+err_y**2)
+                # si l erreur est suffisamment petite on atterit en breakant
+                else:
+                    print('boite')
+                    fly = False
+
+                # mc.start_linear_motion(-body_x_cmd,-body_y_cmd, 0)#revient sur ses pas
+                # time.sleep(1)#laisse le temps de revenir sur la plateforme
+                # break#quitte le while donc atterit
+
+            if not landing :
+                mc.start_linear_motion(body_x_cmd, body_y_cmd, 0)
 
             time.sleep(0.1)
 
@@ -69,7 +104,7 @@ def take_off_simple(scf):
     ...
 
 def log_pos_callback(timestamp, data, logconf):
-    print(data)
+    #print(data)
     global position_estimate
     global zrange
     global landing
@@ -79,12 +114,12 @@ def log_pos_callback(timestamp, data, logconf):
     if data['range.zrange'] > DEFAULT_HEIGHT*1000:
         zrange = np.append(zrange,data['range.zrange'])
         zrange = zrange[1:]
-        print(zrange)
+        #print(zrange)
 
-    THRESH = 8
+    THRESH = 13
     moy = np.mean(zrange[:len(zrange) - 1])
-    if moy > 295 and (zrange[len(zrange) - 1] < moy - THRESH or zrange[len(zrange) - 1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
-        print('boite')
+    if moy > 395 and (zrange[len(zrange) - 1] < moy - THRESH or zrange[len(zrange) - 1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
+        #print('boite')
         landing = True#le mode landing est activé -> sera utlisé dans move_box_limit
 
 
