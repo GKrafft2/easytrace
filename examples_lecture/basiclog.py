@@ -68,7 +68,7 @@ class LoggingExample:
         self._cf.connection_lost.add_callback(self._connection_lost)
 
         # Initialize log variable
-        self.logs = np.zeros([100000, 1])
+        self.logs = np.zeros([100000, 2])
 
         print('Connecting to %s' % link_uri)
 
@@ -93,7 +93,9 @@ class LoggingExample:
         # self._lg_stab.add_variable('range.left')
         # self._lg_stab.add_variable('range.right')
         # self._lg_stab.add_variable('range.zrange')
-        self._lg_stab.add_variable('stabilizer.roll')
+        # self._lg_stab.add_variable('stabilizer.roll')
+        self._lg_stab.add_variable('stateEstimate.z')
+        self._lg_stab.add_variable('range.zrange')
         # self._lg_stab.add_variable('stabilizer.pitch')
         # self._lg_stab.add_variable('stabilizer.yaw')
 
@@ -115,7 +117,7 @@ class LoggingExample:
             print('Could not add Stabilizer log config, bad configuration.')
 
         # Start a timer to disconnect in 10s
-        t = Timer(5, self._cf.close_link)
+        t = Timer(10, self._cf.close_link)
         t.start()
 
     def _stab_log_error(self, logconf, msg):

@@ -34,7 +34,7 @@ def move_box_limit(scf):
         time.sleep(1)
 
         body_x_cmd = 0.2
-        body_y_cmd = 0.2
+        body_y_cmd = 0
         max_vel = 0.2
         error = 1
 
