@@ -37,16 +37,16 @@ class Easytrace(MotionCommander):
         self._cf.param.add_update_callback(group='deck', name='bcFlow2', cb=self._param_deck_flow)
         time.sleep(1)
 
+        # Variables et types correspondants à logger
+        # stateEstimate 'float' [m] (x, y, z, ...)
+        # range 'uint16_t' [mm] (up, front, left, ...)
+        self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z']
+        self._logs_variables_type = ['float', 'float', 'float']
+
         # Variables à enregistrer
         self.logconf = LogConfig(name='Stabilizer', period_in_ms=10)
-        # self.logconf.add_variable('range.front', 'uint16_t')
-        # self.logconf.add_variable('range.back', 'uint16_t')
-        # self.logconf.add_variable('range.up', 'uint16_t')
-        # self.logconf.add_variable('range.left', 'uint16_t')
-        # self.logconf.add_variable('range.right', 'uint16_t')
-        self.logconf.add_variable('stateEstimate.x', 'float')  # estimated X coordinate
-        self.logconf.add_variable('stateEstimate.y', 'float')  # estimated Y coordinate
-        self.logconf.add_variable('stateEstimate.z', 'float')  # estimated Z coordinate
+        for variable, type in zip(self.logs_variables, self._logs_variables_type):
+            self.logconf.add_variable(variable, type)
 
         # Matrice des logs, s'adapte en fonction du nombre de variables ajoutées
         self.logs_size = 100000
@@ -79,15 +79,6 @@ class Easytrace(MotionCommander):
         if self.count != 0:
             self.save_logs()
 
-    def save_logs(self):
-        # Get timestamp
-        filename = dt.datetime.now().strftime("%Y_%m_%d_%H_%M_%S.csv")
-        # Save log to file
-        if not os.path.exists('logs'):
-            os.makedirs('logs')
-        filepath = os.path.join(os.getcwd(), 'logs', filename)
-        np.savetxt(filepath, self.logs, delimiter=',')
-
     def _stab_log_data(self, timestamp, data, logconf):
         """ Callback from the log API when data arrives """
         # print('[%d][%s]: %s' % (timestamp, logconf.name, data))
@@ -107,6 +98,7 @@ class Easytrace(MotionCommander):
         print('Error when logging %s: %s' % (logconf.name, msg))
 
     def _param_deck_flow(self, _, value_str):
+        """ Check d'initialisation si le deck est bien attaché """
         value = int(value_str)
         print(value)
         if value:
@@ -115,17 +107,73 @@ class Easytrace(MotionCommander):
         else:
             print('Deck is NOT attached!')
 
-    def get_log(self, variable):
-        """ Return the latest log of the given variable index"""
-        return self.logs[self.count-1][variable]
+
+    # ###############################################
+    # =============== LOG FUNCTIONS =================
+
+    def get_log(self, variable, index=None):
+        """ 
+        Si index est donné, retourne le log correspondant
+        Autrement retourne le dernier logs enregistré de l'index de variable donné """
+
+        if index is None:
+            idx_log = self.count-1
+
+        # retourne l'index de la variable de log
+        idx_variable = self.logs_variables.index(variable)
+
+        return self.logs[idx_log][idx_variable]
 
     def start_logs(self):
-        """ Start sending logs """
+        """ Start l'enregistrement des logs """
         self.logconf.start()
     
     def stop_logs(self):
-        """ Stop sending logs """
+        """ Stop les logs. Enregistre automatiquement en CSV et reset la matrice des logs """
         self.logconf.stop()
         self.save_logs()
         self.logs *= 0
         self.count = 0
+
+    def save_logs(self):
+        """ Enregistre la matrice des logs en fichiers CSV"""
+        # Get timestamp
+        filename = dt.datetime.now().strftime("%Y_%m_%d_%H_%M_%S.csv")
+        # Save log to file
+        if not os.path.exists('logs'):
+            os.makedirs('logs')
+        filepath = os.path.join(os.getcwd(), 'logs', filename)
+        np.savetxt(filepath, self.logs, delimiter=',')
+
+    # ###############################################
+    # ============ MOVEMENTS FUNCTIONS ==============
+
+    def go_to_up(self, distance):
+        """ Déplacement en Z à une hauteur absolue
+            TODO:ajouter un PID si précision nécessaire
+        """
+        self.up(distance - self.get_log('stateEstimate.z'))
+
+    def go_to_forward(self, distance):
+        """ Déplacement en Z à une hauteur absolue
+            TODO:ajouter un PID si précision nécessaire
+        """
+        self.forward(distance - self.get_log('stateEstimate.x'))
+
+    def go_to_back(self, distance):
+        """ Déplacement en Z à une hauteur absolue
+            TODO:ajouter un PID si précision nécessaire
+        """
+        self.back(distance - self.get_log('stateEstimate.x'))
+
+    def go_to_left(self, distance):
+        """ Déplacement en Z à une hauteur absolue
+            TODO:ajouter un PID si précision nécessaire
+        """
+        self.left(distance - self.get_log('stateEstimate.y'))
+
+    def go_to_right(self, distance):
+        """ Déplacement en Z à une hauteur absolue
+            TODO:ajouter un PID si précision nécessaire
+        """
+        self.right(distance - self.get_log('stateEstimate.y'))
