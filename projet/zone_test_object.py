@@ -122,11 +122,11 @@ def move_box_limit(scf, drone):
 def move_linear_simple(scf):
     ...
 
-def take_off_simple(scf):
-    mc = MotionCommander(scf, default_height=DEFAULT_HEIGHT)
-    mc.take_off(0.3)
-    time.sleep(5)
-    mc.land()
+def take_off_simple(drone):
+    # mc = MotionCommander(scf, default_height=DEFAULT_HEIGHT)
+    drone.take_off(0.3)
+    time.sleep(2)
+    drone.land()
     print("landed")
 
 def log_pos_callback(timestamp, data, logconf):
@@ -158,12 +158,13 @@ if __name__ == '__main__':
 
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
 
-        drone = Easytrace(scf.cf)
+        drone = Easytrace(scf, default_height=DEFAULT_HEIGHT)
+        
+        drone.start_logs()
+        # move_box_limit(scf, drone)
+        take_off_simple(drone)
+        
+        drone.stop_logs()
+        
 
-        # drone.logconf.data_received_cb.add_callback(log_pos_callback)
-
-        drone.logconf.start()
-        move_box_limit(scf, drone)
-        # take_off_simple(scf)
-        drone.logconf.stop()
 

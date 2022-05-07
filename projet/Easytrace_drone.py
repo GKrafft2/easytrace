@@ -1,3 +1,4 @@
+from email.policy import default
 import logging
 import sys
 import os
@@ -11,7 +12,6 @@ from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.positioning.motion_commander import MotionCommander
 from cflib.utils import uri_helper
-from matplotlib.pyplot import disconnect
 
 import numpy as np
 
@@ -21,23 +21,23 @@ URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E702')
 logging.basicConfig(level=logging.ERROR)
 
 
-class Easytrace():
-    def __init__(self, cf, nb_variables=None):
-        
+class Easytrace(MotionCommander):
+    def __init__(self, scf, default_height):
+        # Initialise le MotionCommander
+        super().__init__(scf, default_height=default_height)
+
         # Crazyflie instance
-        self._cf = cf
+        self._cf = scf.cf
+
         # Variable for the deck flow connection
         self._deck_attached_event = Event()
 
         # ADMIN: Connect some callbacks from the Crazyflie API
-        # self._cf.connected.add_callback(self._connected)
         self._cf.disconnected.add_callback(self._disconnected)
         self._cf.param.add_update_callback(group='deck', name='bcFlow2', cb=self._param_deck_flow)
         time.sleep(1)
 
-        # Initialize log variable
-        self.count = 0
-        self.logs = np.zeros([100000, 3])
+        # Variables à enregistrer
         self.logconf = LogConfig(name='Stabilizer', period_in_ms=10)
         # self.logconf.add_variable('range.front', 'uint16_t')
         # self.logconf.add_variable('range.back', 'uint16_t')
@@ -47,6 +47,11 @@ class Easytrace():
         self.logconf.add_variable('stateEstimate.x', 'float')  # estimated X coordinate
         self.logconf.add_variable('stateEstimate.y', 'float')  # estimated Y coordinate
         self.logconf.add_variable('stateEstimate.z', 'float')  # estimated Z coordinate
+
+        # Matrice des logs, s'adapte en fonction du nombre de variables ajoutées
+        self.logs = np.zeros([100000, len(self.logconf.variables)])
+        # Indique la position du dernier log
+        self.count = 0 
 
         # Adding the configuration cannot be done until a Crazyflie is
         # connected, since we need to check that the variables we
@@ -100,6 +105,15 @@ class Easytrace():
         else:
             print('Deck is NOT attached!')
 
+    def get_log(self, variable):
+        """ Return the latest log of the given variable index"""
+        return self.logs[self.count-1][variable]
+
+    def start_logs(self):
+        self.logconf.start()
+    
+    def stop_logs(self):
+        self.logconf.stop()
 
 if __name__ == '__main__':
 
