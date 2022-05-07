@@ -80,9 +80,6 @@ class Easytrace(MotionCommander):
         if self.count != 0:
             self.save_logs()
 
-        self.land()
-        time.sleep(2)
-
     def _stab_log_data(self, timestamp, data, logconf):
         """ Callback from the log API when data arrives """
         # print('[%d][%s]: %s' % (timestamp, logconf.name, data))
@@ -189,7 +186,7 @@ class Easytrace(MotionCommander):
         # execute Motion Commander method
         super(Easytrace, self).take_off()
         # wait for the drone to stabilize
-        time.sleep(1)
+        time.sleep(1.5)
 
     # surcharge de Motion Commander
     def land(self):

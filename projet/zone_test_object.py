@@ -7,15 +7,17 @@ import time
 import datetime as dt
 from threading import Event
 import numpy as np
+import math
+import struct
 
 # Libraries crazyflie
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
-from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
-from cflib.positioning.motion_commander import MotionCommander
 from cflib.utils import uri_helper
 from matplotlib.pyplot import disconnect
+from cflib.crtp.crtpstack import CRTPPacket
+from cflib.crtp.crtpstack import CRTPPort
 
 # Libraries personnelles
 from Easytrace_drone import Easytrace
@@ -23,6 +25,7 @@ from arena import arena_dim, arena_limits, platform
 
 
 def search_platform(drone:Easytrace):
+    print("METHOD : search_platform")
 
     # Alias pour les logs de drone estimate.x estimate.y et estimate.z
     # Permet de garder les mêmes valeurs durant un passage complet de boucle
@@ -49,7 +52,7 @@ def search_platform(drone:Easytrace):
         position_estimate[2] = drone.get_log('stateEstimate.z')
 
         # Tableau "circulaire" des 5 derniers logs de estimate.z qui sont plus élevé que default_height
-        if position_estimate[2] > LANDING_HEIGHT:
+        if position_estimate[2] < LANDING_HEIGHT :
             zrange = np.append(zrange, position_estimate[2])
             zrange = zrange[1:]
             print(zrange)
@@ -57,17 +60,19 @@ def search_platform(drone:Easytrace):
         # Détecte un changement de hauteur selon le threshold = détection de la plateforme
         THRESH = 0.008
         moy = np.mean(zrange[:len(zrange) - 1])
-        if moy > 0.395 and (zrange[len(zrange) - 1] < moy - THRESH or zrange[len(zrange) - 1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
+        if (zrange[len(zrange) - 1] < moy - THRESH or zrange[len(zrange) - 1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
             #le mode landing est activé
             box_not_found = False
+            drone.stop()
 
         # print(f'z = {position_estimate[2]:.2f}')
 
     print("Platform found, landing")
-    drone.stop()
+    # drone.stop()
     time.sleep(1)
 
 def land_on_platform(drone:Easytrace):
+    print("METHOD : land_on_platform")
 
     max_vel = 0.2
     error = 1
@@ -85,7 +90,8 @@ def land_on_platform(drone:Easytrace):
     center_x = position_estimate[0] + np.sign(drone.speed_x_cmd) * platform.HALF.value
     center_y = position_estimate[1] + np.sign(drone.speed_x_cmd) * platform.HALF.value
 
-    print(f'pos boite = {center_x} y = {center_y}')
+    print(f'pos drone x = {position_estimate[0]:.2f} y = {position_estimate[1]:.2}')
+    print(f'pos boite x = {center_x:.2f} y = {center_y:.2f}')
 
     while(fly):
 
@@ -111,13 +117,9 @@ def land_on_platform(drone:Easytrace):
 
         # si l erreur est suffisamment petite on atterit
         else:
-            print('boite')
+            print('Goal achieved ')
             fly = False
             drone.land()
-
-        # mc.start_linear_motion(-body_x_cmd,-body_y_cmd, 0)#revient sur ses pas
-        # time.sleep(1)#laisse le temps de revenir sur la plateforme
-        # break#quitte le while donc atterit
 
         print(f'x = {position_estimate[0]:.2f} y = {position_estimate[1]:.2f}')
 
@@ -125,9 +127,40 @@ def land_on_platform(drone:Easytrace):
 
 
 def move_linear_simple(drone:Easytrace):
-    ...
+    drone.go_to_forward(4)
 
-def take_off_simple(drone:Easytrace):
+def move_linear_complex(drone:Easytrace):
+    
+
+    # essai de highjacker le position controller
+    # Go to a coordinate
+    x = 4
+    y = 0
+    z = 0.4
+
+    z = drone.height_cmd
+
+    dx = x - drone.get_log('stateEstimate.x')
+    dy = y - drone.get_log('stateEstimate.y')
+    dz = z - drone.get_log('stateEstimate.z')
+    distance = math.sqrt(dx * dx + dy * dy + dz * dz)
+    velocity = 0.2
+
+    if distance > 0.0:
+        duration_s = distance / velocity
+        # self._hl_commander.go_to(x, y, z, 0, duration_s)
+        _send_packet(drone, struct.pack('<BBBfffff', 4, 0, False, x, y, z, 0, duration_s))
+        time.sleep(duration_s)
+
+    
+
+def _send_packet(drone, data):
+    pk = CRTPPacket()
+    pk.port = CRTPPort.SETPOINT_HL
+    pk.data = data
+    drone._cf.send_packet(pk)
+        
+def take_off_land(drone:Easytrace):
 
     drone.take_off(0.3)
     print(drone.get_log('stateEstimate.z'))
@@ -152,15 +185,15 @@ if __name__ == '__main__':
         drone.start_logs()
 
         drone.take_off()
-        # wait for the drone to stabilize
-        time.sleep(1)
 
-        search_platform(drone)
-        land_on_platform(drone)
+        # move_linear_complex(drone)
+        move_linear_simple(drone)
+        drone.go_to_up(0.4)
+        # search_platform(drone)
+        # land_on_platform(drone)
+       
         print("land")
-        time.sleep(1)
         drone.land()
-        # take_off_simple(drone)
 
         drone.stop_logs(save=False)
         

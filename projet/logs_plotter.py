@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # import data in pandas dataframe (change the file name to your local file)
-data = pd.read_csv('logs/2022_05_06_11_38_04.csv', header = None)
+data = pd.read_csv('logs/2022_05_07_16_57_37.csv', header = None)
 print(data)
 
 # remove all-zeros rows
@@ -14,4 +14,11 @@ plt.figure()
 for i in data:
     data[i].plot(label=f'{i}')
 plt.legend()
+
+# plot only one timeserie
+plt.figure()
+data[2].plot()
+plt.legend()
+
+
 plt.show()
