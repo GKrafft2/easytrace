@@ -1,15 +1,11 @@
 from email.policy import default
 import logging
-import sys
 import os
 import time
 import datetime as dt
 from threading import Event
 
-import cflib.crtp
-from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
-from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.positioning.motion_commander import MotionCommander
 from cflib.utils import uri_helper
 
@@ -23,19 +19,25 @@ logging.basicConfig(level=logging.ERROR)
 
 class Easytrace(MotionCommander):
     def __init__(self, scf, default_height):
+
         # Initialise le MotionCommander
         super().__init__(scf, default_height=default_height)
 
         # Crazyflie instance
         self._cf = scf.cf
 
-        # Variable for the deck flow connection
+        # ADMIN: Variable for the deck flow connection
         self._deck_attached_event = Event()
 
         # ADMIN: Connect some callbacks from the Crazyflie API
         self._cf.disconnected.add_callback(self._disconnected)
         self._cf.param.add_update_callback(group='deck', name='bcFlow2', cb=self._param_deck_flow)
         time.sleep(1)
+
+        # Variables de commandes ()
+        self.height_cmd = default_height
+        self.speed_x_cmd = 0
+        self.speed_y_cmd = 0
 
         # Variables et types correspondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
@@ -54,22 +56,21 @@ class Easytrace(MotionCommander):
         # Indique la position du dernier log
         self.count = 0 
 
-        # Adding the configuration cannot be done until a Crazyflie is
-        # connected, since we need to check that the variables we
-        # would like to log are in the TOC.
         try:
             self._cf.log.add_config(self.logconf)
-            # This callback will receive the data
+            # ADMIN: This callback will receive the data
             self.logconf.data_received_cb.add_callback(self._stab_log_data)
-            # This callback will be called on errors
+            # ADMIN: This callback will be called on errors
             self.logconf.error_cb.add_callback(self._stab_log_error)
-            # Start the logging
-            # self.logconf.start()
             time.sleep(1)
         except KeyError as e:
             print('Could not start log configuration, {} not found in TOC'.format(str(e)))
         except AttributeError:
             print('Could not add log config, bad configuration.')
+
+
+    # ###############################################
+    # ========= CRAZYFLY CALLBACK FUNCTIONS =========
 
     def _disconnected(self, link_uri):
         """Callback when the Crazyflie is disconnected (called in all cases)"""
@@ -78,6 +79,9 @@ class Easytrace(MotionCommander):
         # sauvegarde les logs s'il y en a
         if self.count != 0:
             self.save_logs()
+
+        self.land()
+        time.sleep(2)
 
     def _stab_log_data(self, timestamp, data, logconf):
         """ Callback from the log API when data arrives """
@@ -128,12 +132,13 @@ class Easytrace(MotionCommander):
         """ Start l'enregistrement des logs """
         self.logconf.start()
     
-    def stop_logs(self):
+    def stop_logs(self, save=True):
         """ Stop les logs. Enregistre automatiquement en CSV et reset la matrice des logs """
         self.logconf.stop()
-        self.save_logs()
-        self.logs *= 0
-        self.count = 0
+        if save:
+            self.save_logs()
+            self.logs *= 0
+            self.count = 0
 
     def save_logs(self):
         """ Enregistre la matrice des logs en fichiers CSV"""
@@ -144,6 +149,7 @@ class Easytrace(MotionCommander):
             os.makedirs('logs')
         filepath = os.path.join(os.getcwd(), 'logs', filename)
         np.savetxt(filepath, self.logs, delimiter=',')
+
 
     # ###############################################
     # ============ MOVEMENTS FUNCTIONS ==============
@@ -177,3 +183,18 @@ class Easytrace(MotionCommander):
             TODO:ajouter un PID si précision nécessaire
         """
         self.right(distance - self.get_log('stateEstimate.y'))
+
+    # surcharge de Motion Commander
+    def take_off(self):
+        # execute Motion Commander method
+        super(Easytrace, self).take_off()
+        # wait for the drone to stabilize
+        time.sleep(1)
+
+    # surcharge de Motion Commander
+    def land(self):
+        # wait for the drone to stabilize
+        time.sleep(1)
+        # execute Motion Commander method
+        super(Easytrace, self).land()
+
