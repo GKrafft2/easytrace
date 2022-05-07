@@ -154,6 +154,17 @@ if __name__ == '__main__':
 
         land_on_platform(drone)
 
+
+        # ====== lié à double_passage_cercle.csv
+        # drone.forward(0.8, velocity=0.1)
+        # drone.circle_right(0.2, angle_degrees=90)
+        # drone.forward(0.3)
+        # drone.circle_right(0.2, angle_degrees=90)
+        # drone.forward(0.5)
+        # drone.circle_right(0.2, angle_degrees=90)
+        # drone.forward(1)
+
+
         print("land")
         drone.land()
 
