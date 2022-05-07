@@ -48,8 +48,8 @@ class Easytrace(MotionCommander):
         # Variables et types correspondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
         # range 'uint16_t' [mm] (up, front, left, ...)
-        self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z', 'range.zrange']
-        self._logs_variables_type = ['float', 'float', 'float', 'uint16_t']
+        self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z']
+        self._logs_variables_type = ['float', 'float', 'float']
 
         # Variables à enregistrer
         self.logconf = LogConfig(name='Stabilizer', period_in_ms=10)
@@ -199,6 +199,7 @@ class Easytrace(MotionCommander):
 
     # surcharge de Motion Commander
     def land(self, velocity=0.2):
+        """ Vitesse de 1 = chute libre """
         # wait for the drone to stabilize
         time.sleep(1)
         # execute Motion Commander method

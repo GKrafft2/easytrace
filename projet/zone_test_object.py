@@ -44,18 +44,18 @@ def search_platform(drone:Easytrace):
         # time.sleep(1)
         position_estimate[0] = drone.get_log('stateEstimate.x') 
         position_estimate[1] = drone.get_log('stateEstimate.y')
-        position_estimate[2] = drone.get_log('range.zrange')
+        position_estimate[2] = drone.get_log('stateEstimate.z')
 
         # Tableau "circulaire" des 5 derniers logs de estimate.z qui sont plus élevé que default_height
-        if position_estimate[2] > LANDING_HEIGHT*1000 :
+        if position_estimate[2] > LANDING_HEIGHT :
             zrange = np.append(zrange, position_estimate[2])
             zrange = zrange[1:]
             print(zrange)
 
         # Détecte un changement de hauteur selon le threshold = détection de la plateforme
-        THRESH = 10
+        THRESH = 0.010
         moy = np.mean(zrange[:-1])
-        if moy > 395 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
+        if moy > 0.395 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
             #le mode landing est activé
             print("box found")
             box_found = True
@@ -112,7 +112,7 @@ def land_on_platform(drone:Easytrace):
             landing_speed_x = err_x * landing_speed * P
             landing_speed_y = err_y * landing_speed * P
 
-            # eviter que les vitesses deviennent trop grandes marche pas psk on risque d avoir des vitesses negatives
+            # anti-windup
             #if landing_speed_x > 0.2:
                 #landing_speed_x = 0.2
             #if landing_speed_y > 0.2:
@@ -133,18 +133,6 @@ def land_on_platform(drone:Easytrace):
         print(f'x = {position_estimate[0]:.2f} y = {position_estimate[1]:.2f}')
 
     time.sleep(0.1)
-
-
-def move_linear_simple(drone:Easytrace):
-    drone.go_to_forward(4)  
-
-def take_off_land(drone:Easytrace):
-
-    drone.take_off(0.3)
-    print(drone.get_log('stateEstimate.z'))
-    time.sleep(2)
-    drone.land()
-    print("landed")
 
 
 
@@ -172,7 +160,7 @@ if __name__ == '__main__':
         land_on_platform(drone)      
 
         print("land")
-        drone.land(1)
+        drone.land()
 
         drone.stop_logs(save=False)
         
