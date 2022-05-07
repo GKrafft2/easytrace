@@ -163,8 +163,15 @@ if __name__ == '__main__':
         drone.start_logs()
         # move_box_limit(scf, drone)
         take_off_simple(drone)
-        
+
         drone.stop_logs()
+        print("part 1")
+        time.sleep(1)
+        drone.start_logs()
+        time.sleep(1)
+        drone.stop_logs()
+        print("part 2")
+       
         
 
 

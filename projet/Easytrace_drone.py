@@ -49,7 +49,8 @@ class Easytrace(MotionCommander):
         self.logconf.add_variable('stateEstimate.z', 'float')  # estimated Z coordinate
 
         # Matrice des logs, s'adapte en fonction du nombre de variables ajoutées
-        self.logs = np.zeros([100000, len(self.logconf.variables)])
+        self.logs_size = 100000
+        self.logs = np.zeros([self.logs_size, len(self.logconf.variables)])
         # Indique la position du dernier log
         self.count = 0 
 
@@ -74,6 +75,11 @@ class Easytrace(MotionCommander):
         """Callback when the Crazyflie is disconnected (called in all cases)"""
         print('Disconnected from %s' % link_uri)
 
+        # sauvegarde les logs s'il y en a
+        if self.count != 0:
+            self.save_logs()
+
+    def save_logs(self):
         # Get timestamp
         filename = dt.datetime.now().strftime("%Y_%m_%d_%H_%M_%S.csv")
         # Save log to file
@@ -91,6 +97,10 @@ class Easytrace(MotionCommander):
             self.logs[self.count][idx] = data[i]
 
         self.count += 1
+
+        # Soulève une erreur si on atteinds la fin de la matrice
+        if self.count == self.logs_size:
+            raise Exception('Log matrix is full')
 
     def _stab_log_error(self, logconf, msg):
         """ Callback from the log API when an error occurs """
@@ -110,22 +120,12 @@ class Easytrace(MotionCommander):
         return self.logs[self.count-1][variable]
 
     def start_logs(self):
+        """ Start sending logs """
         self.logconf.start()
     
     def stop_logs(self):
+        """ Stop sending logs """
         self.logconf.stop()
-
-if __name__ == '__main__':
-
-    # initalise les drivers low level, obligatoire
-    cflib.crtp.init_drivers()
-
-    with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
-
-        drone = Easytrace(scf.cf)
-
-        
-        drone.logconf.start()
-        # move_box_limit(scf)
-        time.sleep(5)
-        drone.logconf.stop()
+        self.save_logs()
+        self.logs *= 0
+        self.count = 0
