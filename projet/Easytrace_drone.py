@@ -45,6 +45,7 @@ class Easytrace(MotionCommander):
         self.y = 0
         self.z = 0
 
+
         # Variables et types correspondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
         # range 'uint16_t' [mm] (up, front, left, ...)

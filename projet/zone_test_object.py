@@ -19,8 +19,8 @@ from Easytrace_drone import Easytrace
 from arena import arena_dim, arena_limits, platform
 
 
-def search_platform(drone:Easytrace):
-    print("METHOD : search_platform")
+def search_edge(drone:Easytrace, speed_x, speed_y):
+    print("METHOD : search_edge")
 
     # Alias pour les logs de drone estimate.x estimate.y et estimate.z
     # Permet de garder les mêmes valeurs durant un passage complet de boucle
@@ -29,8 +29,8 @@ def search_platform(drone:Easytrace):
 
     zrange = np.zeros(5)
     box_found = False
-    drone.speed_x_cmd = 0.2
-    drone.speed_y_cmd = 0
+    drone.speed_x_cmd = speed_x
+    drone.speed_y_cmd = speed_y
 
     # Assure d'être à 40cm de hauteur pour chercher la platform
     LANDING_HEIGHT = 0.4
@@ -50,31 +50,23 @@ def search_platform(drone:Easytrace):
         if position_estimate[2] > LANDING_HEIGHT :
             zrange = np.append(zrange, position_estimate[2])
             zrange = zrange[1:]
-            print(zrange)
+            # print(zrange)
 
         # Détecte un changement de hauteur selon le threshold = détection de la plateforme
         THRESH = 0.010
         moy = np.mean(zrange[:-1])
         if moy > 0.395 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
             #le mode landing est activé
-            print("box found")
+            print("edge found")
             box_found = True
             drone.stop()
         
-        # Délai très important ! (faut le temps que les cmd soient envoyées au drone)
+        # Délai très important ! (faut le temps que les commandes soient envoyées au drone)
         time.sleep(0.1)
-        # print(f'z = {position_estimate[2]:.2f}')
 
-    print("Platform found, landing")
-    drone.stop()
-    time.sleep(1)
+    # retourne la position position détectée
+    return position_estimate[0], position_estimate[1]
 
-def detect_ascend(drone:Easytrace):
-    detected = False
-    return detected
-
-def detect_descend(drone:Easytrace):
-    pass
 
 def land_on_platform(drone:Easytrace):
     print("METHOD : land_on_platform")
@@ -84,7 +76,7 @@ def land_on_platform(drone:Easytrace):
 
     fly = True
     drone.speed_x_cmd = 0.2
-    drone.speed_y_cmd = 0
+    drone.speed_y_cmd = -0.2
         
     #screenshot de la pos au moment ou il detecte la boite
     position_estimate = [0,0]
@@ -92,45 +84,48 @@ def land_on_platform(drone:Easytrace):
     position_estimate[1] = drone.get_log('stateEstimate.y')
 
     # on estime le centre de la box en fonction de là où il detecte un edge
-    center_x = position_estimate[0] + np.sign(drone.speed_x_cmd) * platform.HALF.value
-    center_y = position_estimate[1] + np.sign(drone.speed_y_cmd) * platform.HALF.value
+    center_x = platform.x_start + np.sign(drone.speed_x_cmd) * platform.HALF
+    center_y = platform.y_start - np.sign(drone.speed_y_cmd) * platform.HALF
 
-    print(f'pos drone x = {position_estimate[0]:.2f} y = {position_estimate[1]:.2}')
-    print(f'pos boite x = {center_x:.2f} y = {center_y:.2f}')
+    print(f'pos drone x = {position_estimate[0]:.3f} y = {position_estimate[1]:.3}')
+    print(f'pos boite x = {center_x:.3f} y = {center_y:.3f}')
+    print(f'Platform start x = {platform.x_start:.3f} y = {platform.y_start:.3f}')
 
     while(fly):
 
         position_estimate[0] = drone.get_log('stateEstimate.x') 
         position_estimate[1] = drone.get_log('stateEstimate.y')
-        print(f'error {error}')
+        # print(f'error {error}')
         # essaye de revenir au centre de la boite
-        if error > 0.02 :
+        if error > 0.005 :
             landing_speed = -0.1
-            P = 5
+            P = 6
             err_x = (position_estimate[0]-center_x)
             err_y = (position_estimate[1]-center_y)
             landing_speed_x = err_x * landing_speed * P
             landing_speed_y = err_y * landing_speed * P
 
             # anti-windup
-            #if landing_speed_x > 0.2:
-                #landing_speed_x = 0.2
-            #if landing_speed_y > 0.2:
-                #landing_speed_y = 0.2
-            print(landing_speed_x, landing_speed_y)
+            # if landing_speed_x > 0.2:
+            #     landing_speed_x = 0.2
+            # if landing_speed_y > 0.2:
+            #     landing_speed_y = 0.2
+            # print(landing_speed_x, landing_speed_y)
 
             drone.start_linear_motion(landing_speed_x,landing_speed_y, 0)
             error = np.sqrt(err_x**2+err_y**2)
 
         # si l erreur est suffisamment petite on atterit
         else:
+            print(f'pos drone x = {position_estimate[0]:.3f} y = {position_estimate[1]:.3}')
             print('Goal achieved ')
+            
             fly = False
             drone.stop()
 
         time.sleep(0.1)
 
-        print(f'x = {position_estimate[0]:.2f} y = {position_estimate[1]:.2f}')
+        # print(f'x = {position_estimate[0]:.2f} y = {position_estimate[1]:.2f}')
 
     time.sleep(0.1)
 
@@ -152,12 +147,12 @@ if __name__ == '__main__':
 
         drone.take_off()
 
-        # move_linear_complex(drone)
-        # move_linear_simple(drone)
-        # drone.go_to_up(0.4)
-        search_platform(drone)
-        # time.sleep(5)
-        land_on_platform(drone)      
+        platform.x_start, _ = search_edge(drone, 0.2, 0)
+        drone.move_distance(0.08, 0, 0, 0.2)
+        time.sleep(2)
+        _, platform.y_start = search_edge(drone, 0, -0.12)  
+
+        land_on_platform(drone)
 
         print("land")
         drone.land()

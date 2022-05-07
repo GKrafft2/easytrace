@@ -68,7 +68,7 @@ class LoggingExample:
         self._cf.connection_lost.add_callback(self._connection_lost)
 
         # Initialize log variable
-        self.logs = np.zeros([100000, 2])
+        self.logs = np.zeros([100000, 3])
 
         print('Connecting to %s' % link_uri)
 
@@ -94,8 +94,10 @@ class LoggingExample:
         # self._lg_stab.add_variable('range.right')
         # self._lg_stab.add_variable('range.zrange')
         # self._lg_stab.add_variable('stabilizer.roll')
+        self._lg_stab.add_variable('stateEstimate.x')
+        self._lg_stab.add_variable('stateEstimate.y')
         self._lg_stab.add_variable('stateEstimate.z')
-        self._lg_stab.add_variable('range.zrange')
+        # self._lg_stab.add_variable('range.zrange')
         # self._lg_stab.add_variable('stabilizer.pitch')
         # self._lg_stab.add_variable('stabilizer.yaw')
 
