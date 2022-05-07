@@ -4,6 +4,7 @@ import os
 import time
 import datetime as dt
 from threading import Event
+from typing import Tuple
 
 from cflib.crazyflie.log import LogConfig
 from cflib.positioning.motion_commander import MotionCommander
@@ -39,11 +40,16 @@ class Easytrace(MotionCommander):
         self.speed_x_cmd = 0
         self.speed_y_cmd = 0
 
+        # Variables d'état
+        self.x = 0
+        self.y = 0
+        self.z = 0
+
         # Variables et types correspondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
         # range 'uint16_t' [mm] (up, front, left, ...)
-        self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z']
-        self._logs_variables_type = ['float', 'float', 'float']
+        self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z', 'range.zrange']
+        self._logs_variables_type = ['float', 'float', 'float', 'uint16_t']
 
         # Variables à enregistrer
         self.logconf = LogConfig(name='Stabilizer', period_in_ms=10)
@@ -83,7 +89,7 @@ class Easytrace(MotionCommander):
     def _stab_log_data(self, timestamp, data, logconf):
         """ Callback from the log API when data arrives """
         # print('[%d][%s]: %s' % (timestamp, logconf.name, data))
-        
+
         # Save info into log variable
         for idx, i in enumerate(list(data)):
             self.logs[self.count][idx] = data[i]
@@ -115,15 +121,18 @@ class Easytrace(MotionCommander):
     def get_log(self, variable, index=None):
         """ 
         Si index est donné, retourne le log correspondant
+        Si array est vrai, retourne une liste des derniers indexs
         Autrement retourne le dernier logs enregistré de l'index de variable donné """
-
-        if index is None:
-            idx_log = self.count-1
 
         # retourne l'index de la variable de log
         idx_variable = self.logs_variables.index(variable)
 
-        return self.logs[idx_log][idx_variable]
+        if index is None:
+            idx_log = self.count-1
+        else:
+            idx_log = self.count+index
+            
+        return self.logs[idx_log][idx_variable]        
 
     def start_logs(self):
         """ Start l'enregistrement des logs """
@@ -189,9 +198,9 @@ class Easytrace(MotionCommander):
         time.sleep(1.5)
 
     # surcharge de Motion Commander
-    def land(self):
+    def land(self, velocity=0.2):
         # wait for the drone to stabilize
         time.sleep(1)
         # execute Motion Commander method
-        super(Easytrace, self).land()
+        super(Easytrace, self).land(velocity)
 

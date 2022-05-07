@@ -38,7 +38,7 @@ def move_box_limit(scf):
         max_vel = 0.2
         error = 1
 
-        demi_boite = 0.15
+        demi_boite = 0.05
 
         fly = True
         first_pass = True
@@ -114,11 +114,11 @@ def log_pos_callback(timestamp, data, logconf):
     if data['range.zrange'] > DEFAULT_HEIGHT*1000:
         zrange = np.append(zrange,data['range.zrange'])
         zrange = zrange[1:]
-        #print(zrange)
+        print(zrange)
 
-    THRESH = 13
-    moy = np.mean(zrange[:len(zrange) - 1])
-    if moy > 395 and (zrange[len(zrange) - 1] < moy - THRESH or zrange[len(zrange) - 1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
+    THRESH = 10
+    moy = np.mean(zrange[:-1])
+    if moy > 395 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
         #print('boite')
         landing = True#le mode landing est activé -> sera utlisé dans move_box_limit
 
