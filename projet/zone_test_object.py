@@ -121,7 +121,7 @@ def land_on_platform(drone:Easytrace):
             print('Goal achieved ')
             
             fly = False
-            drone.stop()
+            drone.stop() #  nécessaire si on a déja un drone.land() ?
 
         time.sleep(0.1)
 

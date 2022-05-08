@@ -49,8 +49,10 @@ class Easytrace(MotionCommander):
         # Variables et types correspondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
         # range 'uint16_t' [mm] (up, front, left, ...)
-        self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z']
-        self._logs_variables_type = ['float', 'float', 'float']
+        self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
+                               'range.front', 'range.back', 'range.left', 'range.right', 'range.up']
+        self._logs_variables_type = ['float', 'float', 'float',
+                                     'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t']
 
         # Variables à enregistrer
         self.logconf = LogConfig(name='Stabilizer', period_in_ms=10)
@@ -205,4 +207,5 @@ class Easytrace(MotionCommander):
         time.sleep(1)
         # execute Motion Commander method
         super(Easytrace, self).land(velocity)
+
 
