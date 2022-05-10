@@ -5,7 +5,7 @@ import numpy as np
 from scipy.signal import correlate
 
 # import data in pandas dataframe (change the file name to your local file)
-data = pd.read_csv('logs/2022_05_08_14_52_23.csv', header = None)
+data = pd.read_csv('logs/2022_05_10_18_51_05.csv', header = None)
 print(data)
 
 # remove all-zeros rows
@@ -39,11 +39,11 @@ for i in list:
     plt.axvline(e2)
 plt.legend()
 
-# # plot only one timeserie
-# plt.figure()
-# data[0].plot()
-# data[1].plot()
-# data[2].plot()
+# plot only one timeserie
+plt.figure()
+data[0].plot()
+data[1].plot()
+data[2].plot()
 
 
 plt.legend()

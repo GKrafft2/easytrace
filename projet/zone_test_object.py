@@ -53,7 +53,7 @@ def search_edge(drone:Easytrace, speed_x, speed_y):
             # print(zrange)
 
         # Détecte un changement de hauteur selon le threshold = détection de la plateforme
-        THRESH = 0.010
+        THRESH = 0.013
         moy = np.mean(zrange[:-1])
         if moy > 0.395 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
             #le mode landing est activé
@@ -84,8 +84,8 @@ def land_on_platform(drone:Easytrace):
     position_estimate[1] = drone.get_log('stateEstimate.y')
 
     # on estime le centre de la box en fonction de là où il detecte un edge
-    center_x = platform.x_start + np.sign(drone.speed_x_cmd) * platform.HALF
-    center_y = platform.y_start - np.sign(drone.speed_y_cmd) * platform.HALF
+    center_x = platform.x_start + np.sign(drone.speed_x_cmd) * platform.HALF_X
+    center_y = platform.y_start + np.sign(drone.speed_y_cmd) * platform.HALF_Y
 
     print(f'pos drone x = {position_estimate[0]:.3f} y = {position_estimate[1]:.3}')
     print(f'pos boite x = {center_x:.3f} y = {center_y:.3f}')
@@ -97,9 +97,9 @@ def land_on_platform(drone:Easytrace):
         position_estimate[1] = drone.get_log('stateEstimate.y')
         # print(f'error {error}')
         # essaye de revenir au centre de la boite
-        if error > 0.005 :
+        if error > 0.01 :
             landing_speed = -0.1
-            P = 6
+            P = 5.5
             err_x = (position_estimate[0]-center_x)
             err_y = (position_estimate[1]-center_y)
             landing_speed_x = err_x * landing_speed * P
@@ -148,11 +148,16 @@ if __name__ == '__main__':
         drone.take_off()
 
         platform.x_start, _ = search_edge(drone, 0.2, 0)
-        drone.move_distance(0.08, 0, 0, 0.2)
+        drone.move_distance(0.15, 0, 0, 0.3) # avance un peu au centre de la plateforme
         time.sleep(2)
-        _, platform.y_start = search_edge(drone, 0, -0.12)  
-
+        drone.move_distance(0, 0.6, 0, 0.2)
+        time.sleep(2)        
+        _, platform.y_start = search_edge(drone, 0, -0.2)  
         land_on_platform(drone)
+        time.sleep(2)
+        drone.take_off(1)
+        time.sleep(3)
+        drone.land()
 
 
         # ====== lié à double_passage_cercle.csv
