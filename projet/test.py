@@ -1,22 +1,19 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
-# temp = np.zeros(5)
-# for i in range(10):
-#     temp = np.append(temp,float(i))
-#     temp = temp[1:len(temp)]
-#     print(temp)
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import time
 
-# THRESH = 10
-#
-# temp = [300, 301, 303, 304, 315]
-#
-# moy = np.mean(temp[:len(temp)-1])
-# if temp[len(temp)-1] > (moy + THRESH):
-#     print('boite !')
+M = np.zeros((100,100))
 
-test = [1,2,3,4,5,6,\
-        7,8,9,10]
-print(test)
+def animate(i):
+    dataArray = np.random.rand(100,100)
+    matrice.set_array(dataArray)
 
+fig,ax = plt.subplots()
+matrice = ax.matshow(M)
+plt.colorbar(matrice)
 
-
+ani = animation.FuncAnimation(fig, animate, interval=30)
+plt.show()
