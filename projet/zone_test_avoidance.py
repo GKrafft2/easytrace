@@ -42,6 +42,11 @@ def fly_while_avoid(drone:Easytrace):
     speed_y_lat = 0
     speed_y_front = 0
 
+    right = -1
+    left = 1
+
+    avoid_dir = right #drone va commencer par éviter les obstacles par la droite
+
     while fly:
 
         range_sensors[0] = drone.get_log('range.front')
@@ -78,14 +83,13 @@ def fly_while_avoid(drone:Easytrace):
 
             if position_estimate[1] > 0.5:  # trop a gauche doit éviter par la droite
                 #print('obstacle devant drone dans la partie gauche doite aller a droite')
-                speed_y_front = -AVOID_SPEED_FRONT
+                avoid_dir = right
 
             elif position_estimate[1] < -0.5:  # trop a droite doit éviter par la gauche
                 #print('obstacle devant drone dans la partie droite doit aller a gauche ')
-                speed_y_front = AVOID_SPEED_FRONT
-            else:
-                #print('obstacle au centre évite par la droite')
-                speed_y_front = -AVOID_SPEED_FRONT
+                avoid_dir = left
+
+            speed_y_front = avoid_dir * AVOID_SPEED_FRONT
         else:
             #print('aucun obstcale frontal')
             speed_y_front = 0
@@ -99,14 +103,13 @@ def fly_while_avoid(drone:Easytrace):
             correction = 0
 
         if prev_speed != speed_y: # met a jour la commande que si elle est différente de la précédente
-            print('maj de la vitesse ')
+            print(f'maj de la vitesse avec une speed y = {speed_y}')
             drone.start_linear_motion(FORWARD_SPEED-correction, speed_y, 0)
-            time.sleep(0.1) # set la refresh rate de l'évitement
+            time.sleep(0.15) # set la refresh rate de l'évitement / laisset let temps au drone d effectuer le changement de direction
 
         prev_speed = speed_y
 
         #print(f'speed y = {speed_y}')
-
 
 if __name__ == '__main__':
     # initalise les drivers low level, obligatoire
