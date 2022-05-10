@@ -194,9 +194,9 @@ class Easytrace(MotionCommander):
         self.right(distance - self.get_log('stateEstimate.y'))
 
     # surcharge de Motion Commander
-    def take_off(self):
+    def take_off(self, height=None):
         # execute Motion Commander method
-        super(Easytrace, self).take_off()
+        super(Easytrace, self).take_off(height=height)
         # wait for the drone to stabilize
         time.sleep(1.5)
 
