@@ -5,12 +5,12 @@ import numpy as np
 from scipy.signal import correlate
 
 # import data in pandas dataframe (change the file name to your local file)
-data = pd.read_csv('logs/2022_05_10_18_51_05.csv', header = None)
-print(data)
+data = pd.read_csv('logs/2022_05_12_19_14_59.csv', header = None)
+# print(data)
 
 # remove all-zeros rows
 data = data[(data.T != 0).any()]
-print(data)
+# print(data)
 
 data_numpy = np.array(data[2])-0.4
 len_data = int(len(data_numpy)/2)
@@ -25,19 +25,19 @@ match = data_numpy[800:1100]
 output = np.correlate(data_numpy[:len_data], match, "same")
 time = np.arange(0, output.shape[0])
 
-e1 = np.argmax(output)
-output = np.correlate(data_numpy[len_data:], match, "same")
-e2 = np.argmax(output) + len_data
-# plot all timeseries
-plt.figure()
-list = [5, 6]
-for i in list:
-    data[i].plot(label=f'{i}')
-    plt.plot(matchx, match)
-    # plt.plot(time, output)
-    plt.axvline(e1)
-    plt.axvline(e2)
-plt.legend()
+# e1 = np.argmax(output)
+# output = np.correlate(data_numpy[len_data:], match, "same")
+# e2 = np.argmax(output) + len_data
+# # plot all timeseries
+# plt.figure()
+# list = [5, 6]
+# for i in list:
+#     data[i].plot(label=f'{i}')
+#     plt.plot(matchx, match)
+#     # plt.plot(time, output)
+#     plt.axvline(e1)
+#     plt.axvline(e2)
+# plt.legend()
 
 # plot only one timeserie
 plt.figure()

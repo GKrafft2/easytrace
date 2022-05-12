@@ -43,7 +43,7 @@ class Easytrace(MotionCommander):
         # Variables d'état
         self.x = 0
         self.y = 0
-        self.z = 0
+        self.z_cmd = 0
 
 
         # Variables et types correspondants à logger
@@ -121,7 +121,7 @@ class Easytrace(MotionCommander):
     # ###############################################
     # =============== LOG FUNCTIONS =================
 
-    def get_log(self, variable, index=None):
+    def get_log(self, variable, index=None, array=False):
         """ 
         Si index est donné, retourne le log correspondant
         Si array est vrai, retourne une liste des derniers indexs
@@ -130,12 +130,12 @@ class Easytrace(MotionCommander):
         # retourne l'index de la variable de log
         idx_variable = self.logs_variables.index(variable)
 
-        if index is None:
-            idx_log = self.count-1
-        else:
-            idx_log = self.count+index
-            
-        return self.logs[idx_log][idx_variable]        
+        if index is None :
+            return self.logs[self.count-1,idx_variable]
+        elif index is not None and array == True:
+            return self.logs[self.count-index:self.count,idx_variable]
+        else: # index is not None and array == False:
+            return self.logs[self.count-index,idx_variable]
 
     def start_logs(self):
         """ Start l'enregistrement des logs """
@@ -161,8 +161,13 @@ class Easytrace(MotionCommander):
 
 
     # ###############################################
-    # ============ MOVEMENTS FUNCTIONS ==============
+    # ============= STATES FUNCTIONS ================
+    def update_states(self):
+        self.z_cmd = self.get_log('stateEstimate.z')
 
+    # ###############################################
+    # ============ MOVEMENTS FUNCTIONS ==============
+    
     def go_to_up(self, distance):
         """ Déplacement en Z à une hauteur absolue
             TODO:ajouter un PID si précision nécessaire
@@ -193,10 +198,17 @@ class Easytrace(MotionCommander):
         """
         self.right(distance - self.get_log('stateEstimate.y'))
 
+    def stop_brutal(self):
+        self.start_back(0.3)
+        time.sleep(0.25)
+        self.stop()
+
     # surcharge de Motion Commander
     def take_off(self, height=None):
         # execute Motion Commander method
         super(Easytrace, self).take_off(height=height)
+        # start logging
+        self.start_logs()
         # wait for the drone to stabilize
         time.sleep(1.5)
 
@@ -207,5 +219,7 @@ class Easytrace(MotionCommander):
         time.sleep(1)
         # execute Motion Commander method
         super(Easytrace, self).land(velocity)
+        # stop logging 
+        self.stop_logs()
 
 
