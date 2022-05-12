@@ -187,12 +187,12 @@ def land_on_platform(drone:Easytrace):
 def procedure1(drone:Easytrace):
     """ Cherche la première arête, puis se déplace vers la droite pour chercher la seconde arrête"""
     drone.take_off()
-    platform.x_start, _ = search_edge(drone, 0.2, 0)
+    platform.x_start, _ = search_edge_infinite(drone, 0.2, 0)
     drone.move_distance(0.15, 0, 0, 0.3) # avance un peu au centre de la plateforme
     time.sleep(2)
     drone.move_distance(0, 0.6, 0, 0.2)
     time.sleep(2)        
-    _, platform.y_start = search_edge(drone, 0, -0.2)  
+    _, platform.y_start = search_edge_infinite(drone, 0, -0.2)  
     land_on_platform(drone)
     time.sleep(2)
     drone.take_off(1)
@@ -209,7 +209,7 @@ def procedure2(drone:Easytrace):
     platform.x_start, platform.y_start = search_edge_infinite(drone, 0.2, 0)
     print(f'Début plateforme x = {platform.x_start:.4f}, y = {platform.y_start:.4f}')
     # avance encore tout en continuant de détecter les edges
-    edge_detected, edge_x_position, edge_y_position = search_edge_timed(drone, 0.2, 0, 0.13)
+    edge_detected, edge_x_position, edge_y_position = search_edge_timed(drone, 0.2, 0, 0.18)
     # stop le drone avec petit coup en arrière pour ne pas drifter
     drone.stop_brutal()
     # si aucun edge n'est détecté, ingore les variables de second edge
@@ -219,7 +219,21 @@ def procedure2(drone:Easytrace):
         edge_x_position = platform.x_start
         edge_y_position = platform.y_start
 
-    # ===== LEVEL 1 ET LEVEL 2 =======
+    y_difference = edge_y_position - platform.y_start
+    direction_moved = landing_level_1(y_difference)
+    end = False
+    while(not end):
+        landing_level_2(direction_moved)
+        detected_sensor = landing_level_3()
+        if detected_sensor == '':
+            end = True
+        else:
+            direction_moved = 0
+
+
+
+def landing_level_1(y_difference):
+    # ===== LEVEL 1 =======
     # Calcule la pente (tendance) de déviation de la position y depuis que la plateforme est détectée
     history = 200
     y_estimate = drone.get_log('stateEstimate.y', history, array=True)
@@ -228,7 +242,7 @@ def procedure2(drone:Easytrace):
     print(f'a = {a:.4e}')
 
     # variable de direction prise (0 tout droit, 1 droit, -1 gauche)
-    direction = 0
+    direction_moved = 0
     
     # A partir de la tendance, si elle est trop élevée, corrige la position
     # double vérif : tendance de déviation en z et déviation aboslue entre le 1er et 2ème edge
@@ -238,32 +252,34 @@ def procedure2(drone:Easytrace):
     if a > 2e-4:
         print("going right with a")
         drone.right(distance, speed)
-        direction = 1
-    elif edge_y_position - platform.y_start > 0.02:
+        direction_moved = 1
+    elif y_difference > 0.02:
         print("going left with b")
-        print(edge_y_position - platform.y_start)
+        print(y_difference)
         drone.left(distance, speed)
-        direction = 1
+        direction_moved = 1
     # trop à droite
     elif a < -2e-4:
         print("going left with a")
         drone.left(distance, speed)
-        direction = -1
-    elif edge_y_position - platform.y_start < -0.02:
+        direction_moved = -1
+    elif y_difference < -0.02:
         print("going right with b")
-        print(edge_y_position - platform.y_start)
+        print(y_difference)
         drone.right(distance, speed)
-        direction = -1
+        direction_moved = -1
+    
+    return direction_moved
 
     
-
+def landing_level_2(direction_moved):
     land = False
-    # repète level 3 en boucle (il faut se poser sans dévier)
+    # repète level 2 en boucle (il faut se poser sans dévier)
     while(not land):
 
         time.sleep(1)
 
-        # ==== LEVEL 3 =======
+        # ==== LEVEL 2 =======
         # le drone descend et détecte ensuite s'il dévie en y durant la descente
         # une descente sur un sol non planaire cause des dévaitions.
         drone.up(-0.25, 0.2)
@@ -274,13 +290,13 @@ def procedure2(drone:Easytrace):
         a, _ = np.polyfit(t_array, y_estimate, 1)
         print(f'ap = {a:.4e}')
 
-        distance = 0.15
-        if a > 1e-4 and (direction == 1 or direction == 0):
+        distance = 0.18
+        if a > 1e-4 and (direction_moved == 1 or direction_moved == 0):
             print("going more right")
             drone.up(0.25, 0.4)
             time.sleep(1)
             drone.right(distance, 0.2)
-        elif a < -1e-4 and (direction == -1 or direction == 0):
+        elif a < -1e-4 and (direction_moved == -1 or direction_moved == 0):
             print("going more left")
             drone.up(0.25, 0.4)
             time.sleep(1)
@@ -294,13 +310,14 @@ def procedure2(drone:Easytrace):
     time.sleep(1)
     print("landed")
 
-    # ==== LEVEL 4 ======
+def landing_level_3():
+    # ==== LEVEL 3 ======
     # détecte s'il n'y a pas de mur une fois atteri, sinon redécolle
     
     sensors = ['range.right', 'range.left', 'range.front', 'range.back']
     detected_sensor = ''
     for sensor in sensors:
-        # si plus proche que 15cm
+        # si plus proche que 
         if drone.get_log(sensor) < 150:
             print("Not on platform")
             print(f'Sensor {sensor} detected object at {drone.get_log(sensor)/10} mm')
@@ -308,7 +325,7 @@ def procedure2(drone:Easytrace):
 
     if detected_sensor != '':
         drone.take_off(0.4)
-        distance = 0.15
+        distance = 0.3
         if detected_sensor == 'range.right':
             drone.right(distance)
         elif detected_sensor == 'range.left':
@@ -320,9 +337,8 @@ def procedure2(drone:Easytrace):
 
         drone.stop()
         time.sleep(1)
-        drone.land()
 
-
+    return detected_sensor
 
 
 
