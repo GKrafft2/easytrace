@@ -200,8 +200,9 @@ class Easytrace(MotionCommander):
 
     def stop_brutal(self):
         self.start_back(0.3)
-        time.sleep(0.25)
+        time.sleep(0.3)
         self.stop()
+        time.sleep(0.5)
 
     # surcharge de Motion Commander
     def take_off(self, height=None):
@@ -219,7 +220,5 @@ class Easytrace(MotionCommander):
         time.sleep(1)
         # execute Motion Commander method
         super(Easytrace, self).land(velocity)
-        # stop logging 
-        self.stop_logs()
 
 
