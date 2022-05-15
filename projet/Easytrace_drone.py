@@ -45,15 +45,11 @@ class Easytrace(MotionCommander):
         self.y = 0
         self.z_cmd = 0
 
-<<<<<<< HEAD
+
         # sensor variables
         self.range_sensors = np.empty(5)
         self.position_estimate = np.empty(2)
-=======
-        # sensors variable
-        self.range_sensors = np.empty(5)            # faudra peut etre changer le 5 par une variable
-        self.position_estimate = np.empty(2)        #conflit avec x et y mais plus simple en tableau non?
->>>>>>> 48797dadb6008a652562e9c121619698afb9deef
+
 
         # constantes pour l'évitement
         self.AVOID_DIST_LAT = 150  # mm
