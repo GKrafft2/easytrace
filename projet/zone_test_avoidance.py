@@ -61,19 +61,15 @@ def fly_while_avoid(drone:Easytrace):
         print(range_sensors)
 
         # -- évitement latéral --
-
         if range_sensors[2] < AVOID_DIST_LAT:  # obstacle détecté à gauche
             #print('obstacle a gauche')
             speed_y_lat = -AVOID_SPEED_LAT
-
         elif range_sensors[3] < AVOID_DIST_LAT:  # obstacle détecté à droite
             #print('obstacle a droite')
             speed_y_lat = AVOID_SPEED_LAT
-
         else:
             #print('aucun obstcale lateral')
             speed_y_lat = 0
-
         # --------------------------
 
         # -- évitement frontal -----
@@ -110,6 +106,13 @@ def fly_while_avoid(drone:Easytrace):
         prev_speed = speed_y
 
         #print(f'speed y = {speed_y}')
+
+class avoidance:
+    right = -1
+    left = 1
+
+    avoid_dir = right  # drone va commencer par éviter les obstacles par la droite
+
 
 if __name__ == '__main__':
     # initalise les drivers low level, obligatoire
