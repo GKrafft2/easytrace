@@ -45,6 +45,10 @@ class Easytrace(MotionCommander):
         self.y = 0
         self.z_cmd = 0
 
+        # sensors variable
+        self.range_sensors = np.empty(5)            # faudra peut etre changer le 5 par une variable
+        self.position_estimate = np.empty(2)        #conflit avec x et y mais plus simple en tableau non?
+
         # constantes pour l'évitement
         self.AVOID_DIST_LAT = 150  # mm
         self.AVOID_DIST_FRONT = 400  # mm
@@ -181,6 +185,16 @@ class Easytrace(MotionCommander):
     # ============= STATES FUNCTIONS ================
     def update_states(self):
         self.z_cmd = self.get_log('stateEstimate.z')
+
+    def refresh_logs(self):
+        self.range_sensors[0] = self.get_log('range.front')
+        self.range_sensors[1] = self.get_log('range.back')
+        self.range_sensors[2] = self.get_log('range.left')
+        self.range_sensors[3] = self.get_log('range.right')
+        self.range_sensors[4] = self.get_log('range.up')
+
+        self.position_estimate[0] = self.get_log('stateEstimate.x')
+        self.position_estimate[1] = self.get_log('stateEstimate.y')
 
     # ###############################################
     # ============ MOVEMENTS FUNCTIONS ==============
