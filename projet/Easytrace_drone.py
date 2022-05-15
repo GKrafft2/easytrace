@@ -45,6 +45,10 @@ class Easytrace(MotionCommander):
         self.y = 0
         self.z_cmd = 0
 
+        # sensor variables
+        self.range_sensors = np.empty(5)
+        self.position_estimate = np.empty(2)
+
         # constantes pour l'évitement
         self.AVOID_DIST_LAT = 150  # mm
         self.AVOID_DIST_FRONT = 400  # mm
@@ -59,9 +63,7 @@ class Easytrace(MotionCommander):
 
         # limites qui vont changer la direction d'évitement
         self.limit_lat_left = 0.5
-        self.limit_lat_right = 0.5
-
-
+        self.limit_lat_right = -0.5
 
         # Variables et types correspondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
@@ -182,6 +184,16 @@ class Easytrace(MotionCommander):
     def update_states(self):
         self.z_cmd = self.get_log('stateEstimate.z')
 
+    def refresh_logs(self):
+        self.range_sensors[0] = self.get_log('range.front')
+        self.range_sensors[1] = self.get_log('range.back')
+        self.range_sensors[2] = self.get_log('range.left')
+        self.range_sensors[3] = self.get_log('range.right')
+        self.range_sensors[4] = self.get_log('range.up')
+
+        self.position_estimate[0] = self.get_log('stateEstimate.x')
+        self.position_estimate[1] = self.get_log('stateEstimate.y')
+
     # ###############################################
     # ============ MOVEMENTS FUNCTIONS ==============
     
@@ -240,7 +252,6 @@ class Easytrace(MotionCommander):
 
     # ============ AVOIDING FUNCTIONS ==============
 
-
     # gauche droite sont définis par rapport à la direction dans laquelle le drone va
     # fonction pour cross le terrain (avant/arrière)
     def crossing_avoid(self, front):
@@ -264,18 +275,31 @@ class Easytrace(MotionCommander):
             dist = self.get_log('range.back')
 
         if dist < self.AVOID_DIST_FRONT:
-            print("obstacle frontal !")
+            # print("obstacle frontal !")
+
+            # change la direction si le drone est trop a droite ou a gauche
             if self.get_log('stateEstimate.y') > self.limit_lat_left:  # trop a gauche doit éviter par la droite
                 self.avoid_dir = self.right
             elif self.get_log('stateEstimate.y') < self.limit_lat_right:  # trop a droite doit éviter par la gauche
                 self.avoid_dir = self.left
+
+            # if self.avoid_dir == self.left and self.get_log('range.left') < self.AVOID_DIST_LAT : #veut éviter par la gauche mais il y a un obstacle sur la gauche
+            #     self.avoid_dir = self.right
+            # elif self.avoid_dir == self.left and self.get_log('range.right') < self.AVOID_DIST_LAT : #veut éviter par la droite mais il y a un obstacle a droite
+            #     self.avoid_dir = self.right
+
             speed_y_front = self.avoid_dir * self.AVOID_SPEED_FRONT
         else:
             # print('aucun obstacle frontal')
             speed_y_front = 0
 
         # --------------------------
+        if speed_y_front != 0 and speed_y_lat != 0:
+            print(f'speed lat : {speed_y_lat} speed front : {speed_y_front}')
         speed_y = (speed_y_lat + speed_y_front)
+
+        if speed_y_front * speed_y_lat < 0: # (les deux vitesses sont opposées il y a un obstacle qui fait chier)
+            print('obstacle du coté ou on veut éviter frontalement')
 
         if speed_y != 0:
             correction = self.FORWARD_SPEED / 2  # correction pour aller plus lentement quand il y a des obstacles
@@ -283,7 +307,7 @@ class Easytrace(MotionCommander):
             correction = 0
 
         if self.prev_speed != speed_y: # met a jour la commande que si elle est différente de la précédente
-            print(f'maj de la vitesse avec une speed y = {speed_y}')
+            # print(f'maj de la vitesse avec une speed y = {speed_y}')
             if front:  # le drone va en avant
                 self.start_linear_motion(self.FORWARD_SPEED-correction, speed_y, 0)
             else:  # le drone va en arrière
@@ -292,5 +316,22 @@ class Easytrace(MotionCommander):
 
         self.prev_speed = speed_y
 
-        def spiral_search(self):
-            hshshs
+    def spiral_search(self):
+        spiral_y = [1.5, -1.5, 1.2, -1.2, 0.9]
+        spiral_x = [1.5, 0.6, 1.2, 0.9, 0.9]
+        for i, y in enumerate(spiral_y):
+        #     if y > 0:
+        #         print(f'y = {y}')
+        #         self.go_to_right(y)
+        #     else:
+        #         self.go_to_left(y)
+        #
+        #         print(f'x = {spiral_x[i]}')
+        #     if i != 0 and spiral_x[i-1] > spiral_x[i]:
+        #         self.go_to_back(spiral_x[i])
+        #     elif i != 0 and spiral_x[i - 1] < spiral_x[i]:
+        #         self.go_to_forward(spiral_x[i])
+            self.move_distance(0,y,0)
+            self.move_distance(spiral_x[i],0,0)
+
+

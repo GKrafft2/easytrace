@@ -34,7 +34,7 @@ def fly_while_slam(drone:Easytrace):
 
     thresh_obstcl = 50
     blue = 64
-    red = 255
+    red = 128
 
     #while fly:
     for i in range(3000):
@@ -69,7 +69,7 @@ def fly_while_slam(drone:Easytrace):
                 map[int(position_estimate[0])][int(position_estimate[1] - range_sensors[3])] = red  # right
 
         graymap = map.astype('uint8')
-        colormap = cv2.applyColorMap(graymap, cv2.COLORMAP_JET)
+        colormap = cv2.applyColorMap(graymap, cv2.COLORMAP_SPRING)
         imS = cv2.resize(colormap, (map.shape[1], map.shape[0]))
         cv2.imshow('image', imS)
         cv2.waitKey(1)
@@ -96,7 +96,7 @@ class Slam():
         self.range_sensors = np.empty(5)
         self.position_estimate = [self.offset_y, 0]
         self.thresh_obstcl = 50
-        self.blue = 64
+        self.blue = 128
         self.red = 255
 
     def slam_update(self, range_sensor, position_estimates):
@@ -131,7 +131,7 @@ class Slam():
     def map_update(self):
         graymap = self.map.astype('uint8')
         colormap = cv2.applyColorMap(graymap, cv2.COLORMAP_JET)
-        imS = cv2.resize(colormap, (self.map.shape[1], self.map.shape[0]))
+        imS = cv2.resize(colormap, (self.map.shape[1]*2, self.map.shape[0]))
         cv2.imshow('image', imS)
         cv2.waitKey(1)
 
