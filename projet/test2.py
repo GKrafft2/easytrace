@@ -49,13 +49,21 @@ def test2(variable, index=None):
     else:
         return logs[count-index:count:,idx_variable]
 
+def test3(a, b):
+    print(a)
+    print(b)
 
 if __name__ == '__main__':
 
-    log = test2(0, 6)
-    print(log[:-1])
+    a_s = [3, 3]
+    b_s = [2, 2]
+    for a, b in zip(a_s, b_s):
+        test3(a, b)
 
-    print(log)
+    args = [1, 2, 3, 4]
+    test3(args[0], args[1], args[2], args[3])
+
+
 
 
 

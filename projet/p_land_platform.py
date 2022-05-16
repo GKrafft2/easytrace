@@ -48,7 +48,7 @@ def search_edge_infinite(drone:Drone, speed_x, speed_y):
         if position_estimate[2] > flight_height-0.02:
             zrange = np.append(zrange, position_estimate[2])
             zrange = zrange[1:]
-            # print(zrange)
+            print(zrange)
 
         # Détecte un changement de hauteur selon le threshold = détection de la plateforme
         THRESH = 0.013
