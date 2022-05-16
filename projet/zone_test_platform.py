@@ -16,7 +16,7 @@ from cflib.utils import uri_helper
 
 # Libraries personnelles
 from Easytrace_drone import Easytrace
-from arena import arena_dim, arena_limits, platform
+from arena import arena, platform
 
 
 def search_edge_infinite(drone:Easytrace, speed_x, speed_y):
@@ -361,6 +361,7 @@ if __name__ == '__main__':
 
         procedure2(drone)
 
+        drone.go_to(x=1, y=-0.3, z=1.5)
 
 
         

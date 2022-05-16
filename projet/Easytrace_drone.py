@@ -9,6 +9,7 @@ from typing import Tuple
 from cflib.crazyflie.log import LogConfig
 from cflib.positioning.motion_commander import MotionCommander
 from cflib.utils import uri_helper
+from arena import arena
 
 import numpy as np
 
@@ -37,6 +38,7 @@ class Easytrace(MotionCommander):
 
         # Variables de commandes ()
         self.height_cmd = default_height
+        self.default_speed = 0.3
         self.speed_x_cmd = 0
         self.speed_y_cmd = 0
 
@@ -183,6 +185,7 @@ class Easytrace(MotionCommander):
 
     # ###############################################
     # ============= STATES FUNCTIONS ================
+    # pas utilisé je crois
     def update_states(self):
         self.z_cmd = self.get_log('stateEstimate.z')
 
@@ -198,36 +201,50 @@ class Easytrace(MotionCommander):
 
     # ###############################################
     # ============ MOVEMENTS FUNCTIONS ==============
-    
-    def go_to_up(self, distance):
-        """ Déplacement en Z à une hauteur absolue
+    def go_to(self, x=None, y=None, z=None, velocity=0.2):
+        """ Déplacement en à une position absolue
             TODO:ajouter un PID si précision nécessaire
         """
-        self.up(distance - self.get_log('stateEstimate.z'))
+        
+        if x is None:
+            x = 0
+        else:
+            x, _, _ = self.__go_to_limits_check(x=x)
+            x = x - self.get_log('stateEstimate.x')
+        if y is None:
+            y = 0
+        else:
+            _, y, _ = self.__go_to_limits_check(y=y)
+            y = y - self.get_log('stateEstimate.y')
+        if z is None:
+            z = 0
+        else:
+            _,_, z = self.__go_to_limits_check(z=z)
+            z = z - self.get_log('stateEstimate.z')
 
-    def go_to_forward(self, distance):
-        """ Déplacement en Z à une hauteur absolue
-            TODO:ajouter un PID si précision nécessaire
-        """
-        self.forward(distance - self.get_log('stateEstimate.x'))
+        self.move_distance(x, y, z, velocity)
 
-    def go_to_back(self, distance):
-        """ Déplacement en Z à une hauteur absolue
-            TODO:ajouter un PID si précision nécessaire
-        """
-        self.back(distance - self.get_log('stateEstimate.x'))
+    def __go_to_limits_check(self, x=0, y=0, z=0):
+        """ Vérifie que l'emplacement désiré est autorisé et modifie le cas échéant"""
+        xp, yp, zp = x, y, z
 
-    def go_to_left(self, distance):
-        """ Déplacement en Z à une hauteur absolue
-            TODO:ajouter un PID si précision nécessaire
-        """
-        self.left(distance - self.get_log('stateEstimate.y'))
+        if x > arena.LIM_NORTH:
+            x = arena.LIM_NORTH
+        elif x < arena.LIM_SOUTH:
+            x = arena.LIM_SOUTH
+        if y > arena.LIM_WEST:
+            y = arena.LIM_WEST
+        elif y < arena.LIM_EAST:
+            y = arena.LIM_EAST
+        if z > arena.LIM_UP:
+            z = arena.LIM_UP
+        elif z < arena.LIM_DOWN:
+            z = arena.LIM_DOWN
 
-    def go_to_right(self, distance):
-        """ Déplacement en Z à une hauteur absolue
-            TODO:ajouter un PID si précision nécessaire
-        """
-        self.right(distance - self.get_log('stateEstimate.y'))
+        if xp!=x or yp!=y or zp!=z:
+            print("Go to command modified because outside limits, please check")
+
+        return x, y, z
 
     def stop_brutal(self):
         self.start_back(0.3)
