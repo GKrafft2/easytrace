@@ -1,16 +1,3 @@
-from enum import Enum
-
-class arena_dim():
-    """ Taille [m] absolue de l'arène """
-    WIDTH = 3
-    HEIGHT = 5
-
-class arena_limits():
-    """Limites de l'arène [m], à partir de la zone de départ (référentiel du drone)"""
-    EAST = 1
-    WEST = 2
-    SOUTH = 0.5
-    NORTH = 4.5
 
 class platform():
     """ Dimensions [m] de la plateforme de départ et arrivée """
@@ -20,3 +7,28 @@ class platform():
     HALF_Y = 0.12
     x_start = 0 # emplacement x trouvé de la boite 2
     y_start = 0 # emplacement y trouvé de la boite 2
+
+class arena():
+    """ Dimension en [m] l'arène """
+    
+    # Dimension absolue, origine bas droite
+    WIDTH = 3
+    LENGTH = 5
+
+    # Landing and starting region
+    REGION_LENGTH = 1.5
+
+    # Position (centre) de la plateforme depuis l'origine
+    ORIGIN_X = 0.3        # DEPUIS LE BAS !!!!
+    ORIGIN_Y = 1      # DEPUIS LA DROITE !!!!
+
+    # Limites de l'arène [m], à partir de la plateforme
+    LIM_EAST = - ORIGIN_Y
+    LIM_WEST = WIDTH - ORIGIN_Y
+    LIM_SOUTH = - ORIGIN_X
+    LIM_NORTH = LENGTH - ORIGIN_X
+    LIM_UP = 2
+    LIM_DOWN = 0
+
+
+
