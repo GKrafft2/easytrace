@@ -177,17 +177,17 @@ if __name__ == '__main__':
 
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
         # crée un drone (hérite de motion commander)
-        drone = Drone(scf, default_height=0.2)
+        # drone = Drone(scf, default_height=0.2)
         slam = Slam()
 
-        drone.start_logs()
+        # drone.start_logs()
 
-        drone.take_off()
+        # drone.take_off()
 
         # fly_while_slam(drone)                   #without the slam class
-        fly_while_slam_class(drone, slam)     # with the slam class
+        # fly_while_slam_class(drone, slam)     # with the slam class
 
-        print("land")
-        drone.land()
+        # print("land")
+        # drone.land()
 
-        drone.stop_logs(save=False)
+        # drone.stop_logs(save=False)

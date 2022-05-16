@@ -63,6 +63,8 @@ class Drone(MotionCommander):
 
         #position history
         self.zrange = np.zeros(5)
+        
+        self.obstacle_detected = False
 
 
         # constantes pour l'évitement
@@ -72,8 +74,8 @@ class Drone(MotionCommander):
         self.AVOID_SPEED_FRONT = 0.5
         self.FORWARD_SPEED = 0.3
 
-        self.right = -1
-        self.left = 1
+        self.right_p = -1
+        self.left_p = 1
         self.avoid_dir = self.right  # initial avoid direction
         self.prev_speed = 69
 
