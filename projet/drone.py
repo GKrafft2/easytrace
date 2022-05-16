@@ -61,6 +61,9 @@ class Drone(MotionCommander):
         self.range_sensors = np.empty(5)
         self.position_estimate = np.empty(2)
 
+        #position history
+        self.zrange = np.zeros(5)
+
 
         # constantes pour l'évitement
         self.AVOID_DIST_LAT = 150  # mm
