@@ -14,6 +14,8 @@ from cflib.utils import uri_helper
 from arena import arena
 
 import numpy as np
+import sys
+from slam import Slam
 
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E702')
 
@@ -29,6 +31,9 @@ class Drone(MotionCommander):
 
         # Crazyflie instance
         self._cf = scf.cf
+        
+        # Slam
+        self.slam = Slam()
 
         # ADMIN: Variable for the deck flow connection
         self._deck_attached_event = Event()
@@ -49,6 +54,8 @@ class Drone(MotionCommander):
         self.y = 0
         self.z_cmd = 0
 
+        # Temps
+        self.__time = self.update_time()
 
         # sensor variables
         self.range_sensors = np.empty(5)
@@ -187,7 +194,6 @@ class Drone(MotionCommander):
 
     # ###############################################
     # ============= STATES FUNCTIONS ================
-    # pas utilisé je crois
     def update_states(self):
         self.z_cmd = self.get_log('stateEstimate.z')
 
@@ -200,6 +206,12 @@ class Drone(MotionCommander):
 
         self.position_estimate[0] = self.get_log('stateEstimate.x')
         self.position_estimate[1] = self.get_log('stateEstimate.y')
+
+    def get_time(self):
+        return self.__time
+
+    def update_time(self):
+        self.__time = time.time_ns()/1e9
 
     # ###############################################
     # ============ MOVEMENTS FUNCTIONS ==============
@@ -248,6 +260,41 @@ class Drone(MotionCommander):
 
         return x, y, z
 
+    def limits_check(self):
+        
+        outside_limits = False
+
+        """ Vérifie que l'emplacement désiré est autorisé et modifie le cas échéant"""
+
+        x = self.get_log('stateEstimate.x')
+        y = self.get_log('stateEstimate.y')
+        z = self.get_log('stateEstimate.z')
+
+        if x > arena.LIM_NORTH or x < arena.LIM_SOUTH:
+            speed_x = 0
+            outside_limits = True
+            print("outside x")
+        if y > arena.LIM_WEST or y < arena.LIM_EAST:
+            speed_y = 0
+            outside_limits = True
+            print("outside y")
+        if z > arena.LIM_UP or z < arena.LIM_DOWN:
+            speed_z = 0
+            outside_limits = True
+            print("outside z")
+
+        # pour le moment arrête le drone
+        if outside_limits:
+            self.start_linear_motion(0, 0, 0)
+
+        return outside_limits
+
+    def stop_by_hand(self):
+        if self.get_log('range.up') < 200:
+            self.stop()
+            self.land()
+            sys.exit()
+
     def stop_brutal(self):
         self.start_back(0.3)
         time.sleep(0.3)
@@ -257,8 +304,7 @@ class Drone(MotionCommander):
     # surcharge de Motion Commander
     def take_off(self, height=None):
         # execute Motion Commander method
-        super(Drone
-    , self).take_off(height=height)
+        super(Drone, self).take_off(height=height)
         # start logging
         self.start_logs()
         # wait for the drone to stabilize
@@ -270,8 +316,7 @@ class Drone(MotionCommander):
         # wait for the drone to stabilize
         time.sleep(1)
         # execute Motion Commander method
-        super(Drone
-    , self).land(velocity)
+        super(Drone, self).land(velocity)
 
     # ============ AVOIDING FUNCTIONS ==============
 

@@ -13,17 +13,20 @@ class arena():
     
     # Dimension absolue, origine bas droite
     WIDTH = 3
-    HEIGHT = 5
+    LENGTH = 5
+
+    # Landing and starting region
+    REGION_LENGTH = 1.5
 
     # Position (centre) de la plateforme depuis l'origine
-    ORIGIN_X = 1        # DEPUIS LE BAS !!!!
-    ORIGIN_Y = 0.3      # DEPUIS LA DROITE !!!!
+    ORIGIN_X = 0.3        # DEPUIS LE BAS !!!!
+    ORIGIN_Y = 1      # DEPUIS LA DROITE !!!!
 
     # Limites de l'arène [m], à partir de la plateforme
     LIM_EAST = - ORIGIN_Y
     LIM_WEST = WIDTH - ORIGIN_Y
     LIM_SOUTH = - ORIGIN_X
-    LIM_NORTH = HEIGHT - ORIGIN_X
+    LIM_NORTH = LENGTH - ORIGIN_X
     LIM_UP = 2
     LIM_DOWN = 0
 
