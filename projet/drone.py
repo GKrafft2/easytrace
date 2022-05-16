@@ -63,7 +63,8 @@ class Drone(MotionCommander):
 
         
         self.obstacle_detected = False
-
+        self.obstacle_wait = False
+        self.default_direction = -1
 
         # constantes pour l'évitement
         self.AVOID_DIST_LAT = 150  # mm

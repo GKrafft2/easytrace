@@ -24,7 +24,8 @@ def avoid(drone:Drone):
     global time1
     AVOID_DIST_LAT = 150  #mm
     AVOID_DIST_FRONT = 400  # mm
-    AVOID_SPEED_LAT = 0.3
+    AVOID_SPEED_LAT = 0.5
+    AVOID_SPEED_COME_BACK = 0.3
     AVOID_SPEED_FRONT = 0.3
     FORWARD_SPEED = 0.2
 
@@ -46,7 +47,7 @@ def avoid(drone:Drone):
     RIGHT = -1
     LEFT = 1
 
-    avoid_dir = RIGHT #drone va commencer par éviter les obstacles par la droite
+    avoid_dir = drone.default_direction #drone va commencer par éviter les obstacles par la droite
 
     range_sensors[0] = drone.get_log('range.front')
     range_sensors[1] = drone.get_log('range.back')
@@ -67,20 +68,24 @@ def avoid(drone:Drone):
         drone.obstacle_detected = True
         speed_y_lat = AVOID_SPEED_LAT
     else:
+        drone.obstacle_detected = False
         speed_y_lat = 0
 
 
     # ====== évitement frontal ========
     if range_sensors[0] < AVOID_DIST_FRONT:
         drone.obstacle_detected = True
-        if position_estimate[1] > position_direction + 0.1:  # trop a gauche doit éviter par la droite
+        if position_estimate[1] > position_direction + 0.4:  # trop a gauche doit éviter par la droite
             avoid_dir = RIGHT
-        elif position_estimate[1] < -position_direction - 0.1:  # trop a droite doit éviter par la gauche
+            drone.default_direction = RIGHT
+        elif position_estimate[1] < position_direction - 0.4:  # trop a droite doit éviter par la gauche
             avoid_dir = LEFT
+            drone.default_direction = LEFT
 
         speed_y_front = avoid_dir * AVOID_SPEED_FRONT
     else:
         speed_y_front = 0
+        drone.obstacle_detected = False
 
 
     # ====== update la vitesse en y ======
@@ -90,21 +95,25 @@ def avoid(drone:Drone):
         correction = FORWARD_SPEED/2  # correction pour aller plus lentement quand il y a des obstacles
     
     # ====== revient à la ligne directrice si pas d'obstacle ===============
-    # if drone.obstacle_detected == False:
-    # correction = 0
-    # if position_estimate[1] > position_direction + POSITION_DIRECTION_THRESH:
-    #     speed_y = -AVOID_SPEED_LAT/2
-    # elif position_estimate[1] < position_direction - POSITION_DIRECTION_THRESH:
-    #     speed_y = AVOID_SPEED_LAT/2
-    # else:
-    #     speed_y = 0
+    if drone.obstacle_wait == False:
+        correction = 0
+        if position_estimate[1] > position_direction + POSITION_DIRECTION_THRESH:
+            speed_y = -AVOID_SPEED_COME_BACK
+            print("hello")
+        elif position_estimate[1] < position_direction - POSITION_DIRECTION_THRESH:
+            speed_y = AVOID_SPEED_COME_BACK
+            print("hella")
+        else:
+            speed_y = 0
 
     # ===== Délai avant la déclaration de fin d'obstacle pour revenir sur la ligne de direction
-    # if drone.obstacle_detected == True:
-    #     time1 = time.time_ns()
-    # elif time.time_ns() - time1 > 5*1e9:
-    #     drone.obstacle_detected == False
-    #     print("plus d'obstacle")
+    if drone.obstacle_detected == True:
+        time1 = time.time_ns()
+        drone.obstacle_wait = True
+        print("yolo")
+    if time.time_ns() - time1 > 1*1e9:
+        drone.obstacle_wait = False
+        print("plus d'obstacle")
         
     speed_x = FORWARD_SPEED-correction
     
