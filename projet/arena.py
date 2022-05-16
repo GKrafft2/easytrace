@@ -15,7 +15,7 @@ class arena():
     WIDTH = 3
     HEIGHT = 5
 
-    # Position de la plateforme depuis l'origine
+    # Position (centre) de la plateforme depuis l'origine
     ORIGIN_X = 1        # DEPUIS LE BAS !!!!
     ORIGIN_Y = 0.3      # DEPUIS LA DROITE !!!!
 

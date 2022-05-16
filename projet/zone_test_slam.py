@@ -17,9 +17,10 @@ from cflib.utils import uri_helper
 # import matplotlib.pyplot as plt
 
 # Libraries personnelles
-from Easytrace_drone import Easytrace
-from arena import arena_dim, arena_limits, platform
+from drone import Drone
+
 ################################################################################################
+
 map_shape = (500, 300)
 map = np.zeros(map_shape)
 
@@ -27,7 +28,7 @@ offset_y = np.floor(map_shape[1]/2)
 # creer un offset_x pour le projet final
 
 
-def fly_while_slam(drone:Easytrace):
+def fly_while_slam(drone:Drone):
     fly = True
     range_sensors = np.empty(5)
     position_estimate = [offset_y, 0]
@@ -87,6 +88,7 @@ def fly_while_slam(drone:Easytrace):
     drone.land()
     # le drone se pose et l affichage du SLAM reste actif
     cv2.waitKey(0)
+
 ##########################################################################################################################
 class Slam():
     def __init__(self):
@@ -135,7 +137,7 @@ class Slam():
         cv2.imshow('image', imS)
         cv2.waitKey(1)
 
-def fly_while_slam_class(drone:Easytrace, slam:Slam):
+def fly_while_slam_class(drone:Drone, slam:Slam):
     range_sensors = np.empty(5)
     position_estimate = np.empty(2)
     for i in range(3000):
@@ -175,7 +177,7 @@ if __name__ == '__main__':
 
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
         # crée un drone (hérite de motion commander)
-        drone = Easytrace(scf, default_height=0.2)
+        drone = Drone(scf, default_height=0.2)
         slam = Slam()
 
         drone.start_logs()

@@ -15,11 +15,9 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.utils import uri_helper
 
 # Libraries personnelles
-from Easytrace_drone import Easytrace
-from arena import arena_dim, arena_limits, platform
+from drone import Drone
 
-
-def fly_while_avoid(drone:Easytrace):
+def fly_while_avoid(drone:Drone):
     fly = True
 
     AVOID_DIST_LAT = 150  #mm
@@ -33,6 +31,9 @@ def fly_while_avoid(drone:Easytrace):
     range_sensors = np.empty(5)
 
     position_estimate = [0, 0]
+
+    position_direction = 0
+    position_direction_treshold = 0.05
 
     drone.speed_x_cmd = 0
     drone.speed_y_cmd = 0
@@ -60,7 +61,7 @@ def fly_while_avoid(drone:Easytrace):
 
         print(range_sensors)
 
-        # -- évitement latéral --
+        # ====== évitement latéral =======
         if range_sensors[2] < AVOID_DIST_LAT:  # obstacle détecté à gauche
             #print('obstacle a gauche')
             speed_y_lat = -AVOID_SPEED_LAT
@@ -70,18 +71,16 @@ def fly_while_avoid(drone:Easytrace):
         else:
             #print('aucun obstcale lateral')
             speed_y_lat = 0
-        # --------------------------
 
-        # -- évitement frontal -----
 
+        # ====== évitement frontal ========
         if range_sensors[0] < AVOID_DIST_FRONT:
-            print("obstacle frontal !")
-
-            if position_estimate[1] > 0.5:  # trop a gauche doit éviter par la droite
+            # print("obstacle frontal !")
+            if position_estimate[1] > position_direction:  # trop a gauche doit éviter par la droite
                 #print('obstacle devant drone dans la partie gauche doite aller a droite')
                 avoid_dir = right
 
-            elif position_estimate[1] < -0.5:  # trop a droite doit éviter par la gauche
+            elif position_estimate[1] < -position_direction:  # trop a droite doit éviter par la gauche
                 #print('obstacle devant drone dans la partie droite doit aller a gauche ')
                 avoid_dir = left
 
@@ -90,18 +89,29 @@ def fly_while_avoid(drone:Easytrace):
             #print('aucun obstcale frontal')
             speed_y_front = 0
 
-        # --------------------------
+
+        # ====== update la vitesse en y
         speed_y = (speed_y_lat + speed_y_front)
 
         if speed_y != 0:
             correction = FORWARD_SPEED/2  # correction pour aller plus lentement quand il y a des obstacles
-        else:
+        
+        # ====== revient à la ligne directrice si pas d'obstacle ===============
+        if speed_y == 0:
             correction = 0
+            
+            if position_estimate[1] > position_direction + position_direction_treshold:
+                speed_y = -AVOID_SPEED_LAT/2
+            elif position_estimate[1] < position_direction - position_direction_treshold:
+                speed_y = AVOID_SPEED_LAT/2
+            else:
+                speed_y = 0
+            
 
-        if prev_speed != speed_y: # met a jour la commande que si elle est différente de la précédente
-            print(f'maj de la vitesse avec une speed y = {speed_y}')
-            drone.start_linear_motion(FORWARD_SPEED-correction, speed_y, 0)
-            time.sleep(0.15) # set la refresh rate de l'évitement / laisset let temps au drone d effectuer le changement de direction
+        # if prev_speed != speed_y: # met a jour la commande que si elle est différente de la précédente
+            # print(f'maj de la vitesse avec une speed y = {speed_y}')
+        drone.start_linear_motion(FORWARD_SPEED-correction, speed_y, 0)
+        time.sleep(0.1) # set la refresh rate de l'évitement / laisset let temps au drone d effectuer le changement de direction
 
         prev_speed = speed_y
 
@@ -122,7 +132,7 @@ if __name__ == '__main__':
 
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
         # crée un drone (hérite de motion commander)
-        drone = Easytrace(scf, default_height=0.2)
+        drone = Drone(scf, default_height=0.2)
 
         drone.start_logs()
 
