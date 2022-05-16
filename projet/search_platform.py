@@ -15,105 +15,39 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.utils import uri_helper
 
 # Libraries personnelles
-from Easytrace_drone import Easytrace
-from arena import arena_dim, arena_limits, platform
+from drone import Drone
 
+def edge_detection(drone:Drone):
 
-def fly_while_avoid(drone:Easytrace):
-    fly = True
+    # Alias pour les logs de drone estimate.x estimate.y et estimate.z
+    # Permet de garder les mêmes valeurs durant un passage complet de boucle
+    # Un appel direct aux logs peut être actualisé entre temps
+    position_estimate = [0, 0, 0]
+    edge_detected = False
+    zrange = np.zeros(5)
 
-    AVOID_DIST_LAT = 150  #mm
-    AVOID_DIST_FRONT = 400  # mm
-    AVOID_SPEED_LAT = 0.2
-    AVOID_SPEED_FRONT = 0.5
-    FORWARD_SPEED = 0.3
+    position_estimate[0] = drone.get_log('stateEstimate.x') 
+    position_estimate[1] = drone.get_log('stateEstimate.y')
+    position_estimate[2] = drone.get_log('stateEstimate.z')
 
-    # cree un array pour mettre les 5 variables de sensor
-    # range [front,back,left,right,up]
-    range_sensors = np.empty(5)
+    # Tableau "circulaire" des 5 derniers logs de estimate.z qui sont plus élevé que default_height
+    if position_estimate[2] > drone.height_cmd-0.02:
+        zrange = np.append(zrange, position_estimate[2])
+        zrange = zrange[1:]
 
-    position_estimate = [0, 0]
+    # Détecte un changement de hauteur selon le threshold = détection de la plateforme
+    THRESH = 0.013
+    moy = np.mean(zrange[:-1])
+    if moy > drone.height_cmd-0.05 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
+        #le mode landing est activé
+        print("edge found")
+        edge_detected = True
+        drone.stop()
 
-    drone.speed_x_cmd = 0
-    drone.speed_y_cmd = 0
+    # retourne la position position détectée
+    return edge_detected, position_estimate[0], position_estimate[1]
 
-    prev_speed = 69
-    speed_y = 0
-    speed_y_lat = 0
-    speed_y_front = 0
-
-    right = -1
-    left = 1
-
-    avoid_dir = right #drone va commencer par éviter les obstacles par la droite
-
-    while fly:
-
-        range_sensors[0] = drone.get_log('range.front')
-        range_sensors[1] = drone.get_log('range.back')
-        range_sensors[2] = drone.get_log('range.left')
-        range_sensors[3] = drone.get_log('range.right')
-        range_sensors[4] = drone.get_log('range.up')
-
-        position_estimate[0] = drone.get_log('stateEstimate.x')
-        position_estimate[1] = drone.get_log('stateEstimate.y')
-
-        print(range_sensors)
-
-        # -- évitement latéral --
-        if range_sensors[2] < AVOID_DIST_LAT:  # obstacle détecté à gauche
-            #print('obstacle a gauche')
-            speed_y_lat = -AVOID_SPEED_LAT
-        elif range_sensors[3] < AVOID_DIST_LAT:  # obstacle détecté à droite
-            #print('obstacle a droite')
-            speed_y_lat = AVOID_SPEED_LAT
-        else:
-            #print('aucun obstcale lateral')
-            speed_y_lat = 0
-        # --------------------------
-
-        # -- évitement frontal -----
-
-        if range_sensors[0] < AVOID_DIST_FRONT:
-            print("obstacle frontal !")
-
-            if position_estimate[1] > 0.5:  # trop a gauche doit éviter par la droite
-                #print('obstacle devant drone dans la partie gauche doite aller a droite')
-                avoid_dir = right
-
-            elif position_estimate[1] < -0.5:  # trop a droite doit éviter par la gauche
-                #print('obstacle devant drone dans la partie droite doit aller a gauche ')
-                avoid_dir = left
-
-            speed_y_front = avoid_dir * AVOID_SPEED_FRONT
-        else:
-            #print('aucun obstcale frontal')
-            speed_y_front = 0
-
-        # --------------------------
-        speed_y = (speed_y_lat + speed_y_front)
-
-        if speed_y != 0:
-            correction = FORWARD_SPEED/2  # correction pour aller plus lentement quand il y a des obstacles
-        else:
-            correction = 0
-
-        if prev_speed != speed_y: # met a jour la commande que si elle est différente de la précédente
-            print(f'maj de la vitesse avec une speed y = {speed_y}')
-            drone.start_linear_motion(FORWARD_SPEED-correction, speed_y, 0)
-            time.sleep(0.15) # set la refresh rate de l'évitement / laisset let temps au drone d effectuer le changement de direction
-
-        prev_speed = speed_y
-
-        #print(f'speed y = {speed_y}')
-
-class avoidance:
-    right = -1
-    left = 1
-
-    avoid_dir = right  # drone va commencer par éviter les obstacles par la droite
-
-def search(drone:Easytrace):
+def search(drone:Drone):
     
     #search zone
     CORNER = [[0,0.5],[0,1]]
@@ -121,42 +55,35 @@ def search(drone:Easytrace):
     position_estimate = [0, 0]
     position_estimate[0] = drone.get_log('stateEstimate.x')
     position_estimate[1] = drone.get_log('stateEstimate.y')
-    state = 0
     OFFSET_X = 0.3
     fly = 1
 
     distance_y = 1
     distance_x = 0.2
+    drone.height_cmd = drone.get_log('stateEstimate.z')
+
 
     while(fly):
         position_estimate[0] = drone.get_log('stateEstimate.x')
         position_estimate[1] = drone.get_log('stateEstimate.y')
         # print(position_estimate[1])
-        # va au bord gauche
-        if state == 0:
-            move(drone, distance_y, direction_y=1)
-            state = 1
 
+        # va au bord gauche
+        move(drone, distance_y, direction_y=1)
+
+        # attéri si fin de limitation
+        if (position_estimate[0] + OFFSET_X) > CORNER[0][1]:
+            fly = 0
         # avance de 10cm
-        if state == 1:
-            if (position_estimate[0] + OFFSET_X) > CORNER[0][1]:
-                fly = 0
-            move(drone, distance_x, direction_x=1)
-            state = 2
+        move(drone, distance_x, direction_x=1)
 
         # va au bord droite
-        if state == 2:
-            move(drone, distance_y, direction_y=-1)
-            state = 3
+        move(drone, distance_y, direction_y=-1)
 
         # avance de 10cm
-        if state == 3:
-            if (position_estimate[0] + OFFSET_X) > CORNER[0][1]:
-                fly = 0
-            move(drone, distance_x, direction_x=1)
-            state = 0
+        move(drone, distance_x, direction_x=1)
 
-def move(drone:Easytrace, distance, direction_x=0, direction_y=0, speed_x=0.2, speed_y=0.2):
+def move(drone:Drone, distance, direction_x=0, direction_y=0, speed_x=0.2, speed_y=0.2):
     # direction_x: avant=1, arrière=-1
     # direction_y: droite=-1, gauche=1
     position_estimate = [0, 0]
@@ -168,33 +95,28 @@ def move(drone:Easytrace, distance, direction_x=0, direction_y=0, speed_x=0.2, s
     start_position[1] = drone.get_log('stateEstimate.y')
 
     reach = 0
+    edge_detected = 0
     drone.start_linear_motion(direction_x*speed_x, direction_y*speed_y, 0)
-    while(not reach):
+    while(not reach and not edge_detected):
+        # edge_detected, _, _ = edge_detection(drone)
         position_estimate[0] = drone.get_log('stateEstimate.x')
         position_estimate[1] = drone.get_log('stateEstimate.y')
         if not direction_y and direction_x == 1:
             if abs(start_position[0] + distance)<position_estimate[0]:
                 reach = 1
-                drone.stop
-            print(start_position[0], 'start position')
-            print(start_position[0] + distance, 'start+dist')
-            print(position_estimate[1], 'pos estimate')
+                drone.stop()
         if not direction_y and direction_x == -1:
             if abs(start_position[0] + direction_x*distance)>position_estimate[0]:
                 reach = 1
-                drone.stop
+                drone.stop()
         if not direction_x and direction_y == 1:
             if abs(start_position[1] + distance)<position_estimate[1]:
                 reach = 1
-                drone.stop
-            print(start_position[1] + distance, 'start+dist')
-            print(position_estimate[1], 'pos estimate')
+                drone.stop()
         if not direction_x and direction_y == -1:
             if abs(start_position[1] + direction_y*distance)>position_estimate[1]:
                 reach = 1
-                drone.stop
-            print(start_position[1] + direction_y*distance, 'start+dist')
-            print(position_estimate[1], 'pos estimate')
+                drone.stop()
 
 
 
@@ -269,7 +191,7 @@ if __name__ == '__main__':
 
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
         # crée un drone (hérite de motion commander)
-        drone = Easytrace(scf, default_height=0.2)
+        drone = Drone(scf, default_height=0.4)
 
         drone.start_logs()
 

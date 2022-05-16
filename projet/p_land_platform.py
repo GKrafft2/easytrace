@@ -14,38 +14,7 @@ from cflib.utils import uri_helper
 from drone import Drone
 from arena import arena, platform
 
-def edge_detection(drone:Drone):
-    print("METHOD : search_edge")
 
-    # Alias pour les logs de drone estimate.x estimate.y et estimate.z
-    # Permet de garder les mêmes valeurs durant un passage complet de boucle
-    # Un appel direct aux logs peut être actualisé entre temps
-    position_estimate = [0, 0, 0]
-    edge_detected = False
-    zrange = np.zeros(5)
-
-    flight_height = drone.get_log('stateEstimate.z')
-
-    position_estimate[0] = drone.get_log('stateEstimate.x') 
-    position_estimate[1] = drone.get_log('stateEstimate.y')
-    position_estimate[2] = drone.get_log('stateEstimate.z')
-
-    # Tableau "circulaire" des 5 derniers logs de estimate.z qui sont plus élevé que default_height
-    if position_estimate[2] > flight_height-0.02:
-        zrange = np.append(zrange, position_estimate[2])
-        zrange = zrange[1:]
-
-    # Détecte un changement de hauteur selon le threshold = détection de la plateforme
-    THRESH = 0.013
-    moy = np.mean(zrange[:-1])
-    if moy > flight_height-0.05 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
-        #le mode landing est activé
-        print("edge found")
-        edge_detected = True
-        drone.stop()
-
-    # retourne la position position détectée
-    return edge_detected, position_estimate[0], position_estimate[1]
 
 def search_edge_infinite(drone:Drone, speed_x, speed_y):
     print("METHOD : search_edge")
@@ -389,7 +358,7 @@ if __name__ == '__main__':
 
         main_land_platform(drone)
 
-        drone.go_to(x=1, y=-0.3, z=1.5)
+        # drone.go_to(x=1, y=-0.3, z=1.5)
 
 
         
