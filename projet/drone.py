@@ -61,6 +61,8 @@ class Drone(MotionCommander):
         self.range_sensors = np.empty(5)
         self.position_estimate = np.empty(2)
 
+        #position history
+        self.zrange = np.zeros(5)
         
         self.obstacle_detected = False
         self.obstacle_wait = False
