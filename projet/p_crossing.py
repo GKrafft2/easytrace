@@ -17,6 +17,8 @@ from cflib.utils import uri_helper
 # Libraries personnelles
 from drone import Drone
 
+time1 = 0
+
 def avoid(drone:Drone):
 
     AVOID_DIST_LAT = 150  #mm
@@ -84,9 +86,9 @@ def avoid(drone:Drone):
         correction = FORWARD_SPEED/2  # correction pour aller plus lentement quand il y a des obstacles
     
     # ====== revient à la ligne directrice si pas d'obstacle ===============
-    if speed_y == 0:
+    if speed_y == 0 and time.time_ns()-time1 > 1*1e9:
         correction = 0
-        
+        time1 = time.time_ns()
         if position_estimate[1] > position_direction + POSITION_DIRECTION_THRESH:
             speed_y = -AVOID_SPEED_LAT/2
         elif position_estimate[1] < position_direction - POSITION_DIRECTION_THRESH:
