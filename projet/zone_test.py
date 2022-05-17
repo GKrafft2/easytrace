@@ -97,11 +97,6 @@ def move_box_limit(scf):
             time.sleep(0.1)
 
 
-def move_linear_simple(scf):
-    ...
-
-def take_off_simple(scf):
-    ...
 
 def log_pos_callback(timestamp, data, logconf):
     #print(data)

@@ -40,7 +40,7 @@ def edge_detection(drone:Drone):
     print(moy-drone.zrange[-1])
     if moy > drone.height_cmd-0.05 and (drone.zrange[-1] < moy - THRESH or drone.zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
         #le mode landing est activé
-        print("edge found")
+        print("edge found") #passe la main au landing
         edge_detected = True
         drone.stop()
 
@@ -68,7 +68,7 @@ def main_search_platform(drone:Drone):
     drone.height_cmd = 0.4
     edge_detected = 0
 
-    edge_detected = move(drone, arena.LIM_WEST - position_estimate[1], position_estimate[0], direction_x=1)
+    edge_detected = move(drone, arena.LIM_WEST - position_estimate[1], position_estimate[0], direction_y=1)
     if edge_detected:
         fly = 0
 
