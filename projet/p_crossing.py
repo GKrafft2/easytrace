@@ -182,13 +182,18 @@ def main_crossing(drone:Drone):
     fly = True
 
     #le drone suit la ligne au centre de l'arène
-    central_line = arena.ORIGIN_Y - arena.WIDTH/2
+    central_line = - (arena.ORIGIN_Y - arena.WIDTH/2)
+    # update de la direction par défault s'il y a un obstacle
+    if central_line > 0:
+        drone.default_direction = 1
+    else:
+        drone.default_direction = -1
 
     while(fly):        
         drone.stop_by_hand()
         arrival = start_zone_2_check(drone)
         if not arrival:
-            speed_x, speed_y = avoid(drone, 0.3, Direction.LEFT)
+            speed_x, speed_y = avoid(drone, central_line, Direction.LEFT)
             drone.start_linear_motion(speed_x, speed_y, 0)
             # drone.slam.slam_update() # quoi mettre en paramètre ?
         else:
