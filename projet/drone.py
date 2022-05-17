@@ -64,7 +64,8 @@ class Drone(MotionCommander):
         #position history
         self.zrange = np.zeros(5)
         
-        self.obstacle_detected = False
+        self.obstacle_frontal = False
+        self.obstacle_lateral = False
         self.obstacle_wait = False
         self.default_direction = -1
 

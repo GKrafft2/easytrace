@@ -19,15 +19,19 @@ from drone import Drone
 
 time1 = 0
 
-def avoid(drone:Drone):
 
+def avoid(drone:Drone, line_position):
+    """ avoid obstacle live
+        Param: line_position the y line to follow from drone origin """
     global time1
     AVOID_DIST_LAT = 150  #mm
     AVOID_DIST_FRONT = 400  # mm
     AVOID_SPEED_LAT = 0.5
-    AVOID_SPEED_COME_BACK = 0.3
+    AVOID_SPEED_COME_BACK = 0.25
+    AVOID_TIME_COME_BACK = 1 # secondes
     AVOID_SPEED_FRONT = 0.3
     FORWARD_SPEED = 0.2
+
 
     # cree un array pour mettre les 5 variables de sensor
     # range [front,back,left,right,up]
@@ -35,10 +39,8 @@ def avoid(drone:Drone):
 
     position_estimate = [0, 0]
 
-    position_direction = 0
     POSITION_DIRECTION_THRESH = 0.05
 
-    prev_speed = 69
     correction = 0
     speed_y = 0
     speed_y_lat = 0
@@ -62,30 +64,30 @@ def avoid(drone:Drone):
 
     # ====== évitement latéral =======
     if range_sensors[2] < AVOID_DIST_LAT:  # obstacle détecté à gauche
-        drone.obstacle_detected = True
+        drone.obstacle_lateral = True
         speed_y_lat = -AVOID_SPEED_LAT
     elif range_sensors[3] < AVOID_DIST_LAT:  # obstacle détecté à droite
-        drone.obstacle_detected = True
+        drone.obstacle_lateral = True
         speed_y_lat = AVOID_SPEED_LAT
     else:
-        drone.obstacle_detected = False
+        drone.obstacle_lateral = False
         speed_y_lat = 0
 
 
     # ====== évitement frontal ========
     if range_sensors[0] < AVOID_DIST_FRONT:
-        drone.obstacle_detected = True
-        if position_estimate[1] > position_direction + 0.4:  # trop a gauche doit éviter par la droite
+        drone.obstacle_frontal = True
+        if position_estimate[1] > line_position + 0.4:  # trop a gauche doit éviter par la droite
             avoid_dir = RIGHT
             drone.default_direction = RIGHT
-        elif position_estimate[1] < position_direction - 0.4:  # trop a droite doit éviter par la gauche
+        elif position_estimate[1] < line_position - 0.4:  # trop a droite doit éviter par la gauche
             avoid_dir = LEFT
             drone.default_direction = LEFT
 
         speed_y_front = avoid_dir * AVOID_SPEED_FRONT
     else:
         speed_y_front = 0
-        drone.obstacle_detected = False
+        drone.obstacle_frontal = False
 
 
     # ====== update la vitesse en y ======
@@ -97,23 +99,19 @@ def avoid(drone:Drone):
     # ====== revient à la ligne directrice si pas d'obstacle ===============
     if drone.obstacle_wait == False:
         correction = 0
-        if position_estimate[1] > position_direction + POSITION_DIRECTION_THRESH:
+        if position_estimate[1] > line_position + POSITION_DIRECTION_THRESH:
             speed_y = -AVOID_SPEED_COME_BACK
-            print("hello")
-        elif position_estimate[1] < position_direction - POSITION_DIRECTION_THRESH:
+        elif position_estimate[1] < line_position - POSITION_DIRECTION_THRESH:
             speed_y = AVOID_SPEED_COME_BACK
-            print("hella")
         else:
             speed_y = 0
 
     # ===== Délai avant la déclaration de fin d'obstacle pour revenir sur la ligne de direction
-    if drone.obstacle_detected == True:
+    if drone.obstacle_frontal or drone.obstacle_lateral:
         time1 = time.time_ns()
         drone.obstacle_wait = True
-        print("yolo")
-    if time.time_ns() - time1 > 1*1e9:
+    if time.time_ns() - time1 > AVOID_TIME_COME_BACK*1e9:
         drone.obstacle_wait = False
-        print("plus d'obstacle")
         
     speed_x = FORWARD_SPEED-correction
     
@@ -126,7 +124,7 @@ def main_crossing(drone:Drone):
         drone.stop_by_hand()
         limits = drone.limits_check()
         if not limits:
-            speed_x, speed_y = avoid(drone)
+            speed_x, speed_y = avoid(drone, 0.2)
             drone.start_linear_motion(speed_x, speed_y, 0)
             # drone.slam.slam_update() # quoi mettre en paramètre ?
         else:
