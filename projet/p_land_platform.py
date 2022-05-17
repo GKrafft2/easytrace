@@ -26,8 +26,6 @@ def search_edge_infinite(drone:Drone, speed_x, speed_y):
 
     zrange = np.zeros(5)
     box_found = False
-    drone.speed_x_cmd = speed_x
-    drone.speed_y_cmd = speed_y
     flight_height = drone.get_log('stateEstimate.z')
 
     # # Assure d'être à 40cm de hauteur pour chercher la platform
@@ -38,7 +36,7 @@ def search_edge_infinite(drone:Drone, speed_x, speed_y):
     while(not box_found):
 
         # Met à jour les vitesses de déplacement
-        drone.start_linear_motion(drone.speed_x_cmd, drone.speed_y_cmd, 0)
+        drone.start_linear_motion(speed_x, speed_y, 0)
         # time.sleep(1)
         position_estimate[0] = drone.get_log('stateEstimate.x') 
         position_estimate[1] = drone.get_log('stateEstimate.y')
@@ -126,8 +124,8 @@ def land_on_platform(drone:Drone):
     error = 1
 
     fly = True
-    drone.speed_x_cmd = 0.2
-    drone.speed_y_cmd = -0.2
+    speed_x = 0.2
+    speed_y = -0.2
         
     #screenshot de la pos au moment ou il detecte la boite
     position_estimate = [0,0]
@@ -135,8 +133,8 @@ def land_on_platform(drone:Drone):
     position_estimate[1] = drone.get_log('stateEstimate.y')
 
     # on estime le centre de la box en fonction de là où il detecte un edge
-    center_x = platform.x_start + np.sign(drone.speed_x_cmd) * platform.HALF_X
-    center_y = platform.y_start + np.sign(drone.speed_y_cmd) * platform.HALF_Y
+    center_x = platform.x_start + np.sign(speed_x) * platform.HALF_X
+    center_y = platform.y_start + np.sign(speed_y) * platform.HALF_Y
 
     print(f'pos drone x = {position_estimate[0]:.3f} y = {position_estimate[1]:.3}')
     print(f'pos boite x = {center_x:.3f} y = {center_y:.3f}')

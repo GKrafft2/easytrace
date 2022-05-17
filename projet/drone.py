@@ -46,12 +46,10 @@ class Drone(MotionCommander):
         # Variables de commandes ()
         self.height_cmd = default_height
         self.default_speed = 0.3
-        self.speed_x_cmd = 0
-        self.speed_y_cmd = 0
 
         # Variables d'état
-        self.x = 0
-        self.y = 0
+        # self.x = 0
+        # self.y = 0
         self.z_cmd = 0
 
         # Temps (container pour sauvegarder le temps)
@@ -61,7 +59,7 @@ class Drone(MotionCommander):
         self.range_sensors = np.empty(5)
         self.position_estimate = np.empty(2)
 
-        #position history
+        # Historique de position (pour le edge detection)
         self.zrange = np.zeros(5)
         
         self.obstacle_frontal = False
