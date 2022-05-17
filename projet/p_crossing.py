@@ -96,6 +96,13 @@ def avoid(drone:Drone, line_position, direction:Direction):
         LEFT = -1
     range_sensors[4] = drone.get_log('range.up')
 
+    # ======= adaptation de la distance latérale ==============
+    # si le drone est sur la bonne trajectoire, il sera moins sensible que s'il revient en position
+    if drone.on_track:
+        AVOID_DIST_LAT = 50
+    else:
+        AVOID_DIST_LAT = 160
+
     # ====== évitement latéral =======
     if range_sensors[2] < AVOID_DIST_LAT:  # obstacle détecté à gauche
         drone.obstacle_lateral = True
@@ -135,11 +142,13 @@ def avoid(drone:Drone, line_position, direction:Direction):
         correction = 0
         if position_estimate[1] > line_position + POSITION_DIRECTION_THRESH:
             speed_east =  RIGHT * AVOID_SPEED_COME_BACK
+            drone.on_track = False
         elif position_estimate[1] < line_position - POSITION_DIRECTION_THRESH:
             speed_east =  LEFT * AVOID_SPEED_COME_BACK
+            drone.on_track = False
         else:
             speed_east = 0
-        print(speed_east)
+            drone.on_track = True
 
     # ===== Délai avant la déclaration de fin d'obstacle pour revenir sur la ligne de direction
     if drone.obstacle_frontal or drone.obstacle_lateral:
@@ -187,7 +196,7 @@ def main_crossing(drone:Drone):
         drone.stop_by_hand()
         arrival = start_zone_2_check(drone)
         if not arrival:
-            speed_x, speed_y = avoid(drone, central_line, Direction.LEFT)
+            speed_x, speed_y = avoid(drone, central_line, Direction.FORWARD)
             drone.start_linear_motion(speed_x, speed_y, 0)
             # drone.slam.slam_update() # quoi mettre en paramètre ?
         else:

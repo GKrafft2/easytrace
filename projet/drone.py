@@ -62,10 +62,12 @@ class Drone(MotionCommander):
         # Historique de position (pour le edge detection)
         self.zrange = np.zeros(5)
         
-        self.obstacle_frontal = False
-        self.obstacle_lateral = False
-        self.obstacle_wait = False
-        self.default_direction = -1
+        # Etat des obstacles (pour avoid)
+        self.obstacle_frontal = False   # si obstacle frontal
+        self.obstacle_lateral = False   # si obstacle lateral
+        self.obstacle_wait = False      # pour essayer de revenir après un obstacle
+        self.on_track = False           # si actuellement sur la ligne de suivi
+        self.default_direction = -1     # direction droite (-1) ou gauche (1) pour l'évitement frontale
 
         # Variables et types correspondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
