@@ -37,9 +37,13 @@ if __name__ == '__main__':
 
 
         drone.take_off()
-        main_crossing()
-        main_search_platform()
-        main_land_platform()
-        main_back_home()
+
+        main_crossing(drone)
+        drone.land()
+        drone.slam.slam_hold()
+
+        #main_search_platform()
+        #main_land_platform()
+        #main_back_home()
 
       

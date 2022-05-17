@@ -133,7 +133,7 @@ class Slam():
     def map_update(self):
         graymap = self.map.astype('uint8')
         colormap = cv2.applyColorMap(graymap, cv2.COLORMAP_JET)
-        imS = cv2.resize(colormap, (self.map.shape[1]*2, self.map.shape[0]))
+        imS = cv2.resize(colormap, (self.map.shape[1], self.map.shape[0]))
         cv2.imshow('image', imS)
         cv2.waitKey(1)
 
