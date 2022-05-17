@@ -198,6 +198,10 @@ class Drone(MotionCommander):
         self.position_estimate[0] = self.get_log('stateEstimate.x')
         self.position_estimate[1] = self.get_log('stateEstimate.y')
 
+    def update_slam(self):
+        self.refresh_logs()
+        self.slam.slam_update(self.range_sensors, self.position_estimate)
+
     def get_time(self):
         return self.__time
 
