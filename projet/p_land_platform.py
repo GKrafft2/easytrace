@@ -201,24 +201,27 @@ def main_land_platform(drone:Drone):
     time.sleep(1)
 
     # avance tout droit jusqu'à la boite
-    platform.x_start, platform.y_start = search_edge_infinite(drone, 0.25, 0)
+    platform.x_start, platform.y_start = search_edge_infinite(drone, speed_x=0.25, speed_y=0)
     print(f'Début plateforme x = {platform.x_start:.4f}, y = {platform.y_start:.4f}')
     # avance encore tout en continuant de détecter les edges
-    edge_detected, edge_x_position, edge_y_position = search_edge_timed(drone, 0.2, 0, 0.3)
+    edge_detected, edge_x_position, edge_y_position = search_edge_timed(drone, speed_x=0.2, speed_y=0, distance=0.25)
     # stop le drone avec petit coup en arrière pour ne pas drifter
-    drone.stop_brutal()
-    # si aucun edge n'est détecté, ingore les variables de second edge
-    if(edge_detected):
-        print(f'Edge détecté {edge_x_position:.4f} {edge_y_position:.4f}')
-    else:
-        edge_x_position = platform.x_start
-        edge_y_position = platform.y_start
+    # drone.stop_brutal()
 
-    y_difference = edge_y_position - platform.y_start
-    direction_moved = landing_level_1(y_difference)
+    drone.stop()
+    # si aucun edge n'est détecté, ingore les variables de second edge
+    # if(edge_detected):
+    #     print(f'Edge détecté {edge_x_position:.4f} {edge_y_position:.4f}')
+    # else:
+    #     edge_x_position = platform.x_start
+    #     edge_y_position = platform.y_start
+
+    # y_difference = edge_y_position - platform.y_start
+    # direction_moved = landing_level_1(y_difference)
     end = False
     while(not end):
-        landing_level_2(direction_moved)
+        # landing_level_2(direction_moved)
+        landing_level_2(0)
         detected_sensor = landing_level_3()
         if detected_sensor == '':
             end = True
@@ -354,8 +357,8 @@ if __name__ == '__main__':
         # while(True):
         #     print(drone.get_log('stateEstimate.y'))
 
-        # main_land_platform(drone)
-        procedure1(drone)
+        main_land_platform(drone)
+        # procedure1(drone)
 
         # drone.go_to(x=1, y=-0.3, z=1.5)
 
