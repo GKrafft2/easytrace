@@ -192,13 +192,14 @@ def main_crossing(drone:Drone):
     else:
         drone.default_direction = -1
 
-    while(fly):        
+    while(fly):
+
+        drone.update_slam()
         drone.stop_by_hand()
         arrival = start_zone_2_check(drone)
         if not arrival:
             speed_x, speed_y = avoid(drone, central_line, Direction.FORWARD)
             drone.start_linear_motion(speed_x, speed_y, 0)
-            # drone.slam.slam_update() # quoi mettre en paramètre ?
         else:
             drone.stop()
             fly = False

@@ -20,7 +20,7 @@ class arena():
 
     # Position (centre) de la plateforme depuis l'origine
     ORIGIN_X = 0.3        # DEPUIS LE BAS !!!!
-    ORIGIN_Y = 1      # DEPUIS LA DROITE !!!!
+    ORIGIN_Y = 1.5      # DEPUIS LA DROITE !!!!
 
     # Distance de la zone d'arrivée
     START_ZONE_2 = LENGTH - REGION_LENGTH - ORIGIN_X
