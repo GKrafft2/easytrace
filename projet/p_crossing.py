@@ -134,11 +134,9 @@ def avoid(drone:Drone, line_position, direction:Direction):
     if drone.obstacle_wait == False:
         correction = 0
         if position_estimate[1] > line_position + POSITION_DIRECTION_THRESH:
-            print(f'Pos estimate > : {position_estimate[1]:.3f}')
             speed_east =  RIGHT * AVOID_SPEED_COME_BACK
         elif position_estimate[1] < line_position - POSITION_DIRECTION_THRESH:
             speed_east =  LEFT * AVOID_SPEED_COME_BACK
-            print(f'Pos estimate < : {position_estimate[1]:.3f}')
         else:
             speed_east = 0
         print(speed_east)
@@ -158,9 +156,6 @@ def avoid(drone:Drone, line_position, direction:Direction):
         speed_x, speed_y = -speed_east, speed_north
     elif direction == Direction.RIGHT:
         speed_x, speed_y = speed_east, -speed_north
-        print("\n")
-        print(f'Speed east {speed_east}')
-        print(speed_north)
     elif direction == Direction.BACKWARD:
         speed_x, speed_y = -speed_north, -speed_east
     
@@ -180,11 +175,19 @@ def start_zone_2_check(drone:Drone):
 def main_crossing(drone:Drone):
     fly = True
 
+    #le drone suit la ligne au centre de l'arène
+    central_line = - (arena.ORIGIN_Y - arena.WIDTH/2)
+    # update de la direction par défault s'il y a un obstacle
+    if central_line > 0:
+        drone.default_direction = 1
+    else:
+        drone.default_direction = -1
+
     while(fly):        
         drone.stop_by_hand()
         arrival = start_zone_2_check(drone)
         if not arrival:
-            speed_x, speed_y = avoid(drone, 0.3, Direction.LEFT)
+            speed_x, speed_y = avoid(drone, central_line, Direction.LEFT)
             drone.start_linear_motion(speed_x, speed_y, 0)
             # drone.slam.slam_update() # quoi mettre en paramètre ?
         else:

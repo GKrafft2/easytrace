@@ -46,12 +46,10 @@ class Drone(MotionCommander):
         # Variables de commandes ()
         self.height_cmd = default_height
         self.default_speed = 0.3
-        self.speed_x_cmd = 0
-        self.speed_y_cmd = 0
 
         # Variables d'état
-        self.x = 0
-        self.y = 0
+        # self.x = 0
+        # self.y = 0
         self.z_cmd = 0
 
         # Temps (container pour sauvegarder le temps)
@@ -61,29 +59,13 @@ class Drone(MotionCommander):
         self.range_sensors = np.empty(5)
         self.position_estimate = np.empty(2)
 
-        #position history
+        # Historique de position (pour le edge detection)
         self.zrange = np.zeros(5)
         
         self.obstacle_frontal = False
         self.obstacle_lateral = False
         self.obstacle_wait = False
         self.default_direction = -1
-
-        # constantes pour l'évitement
-        self.AVOID_DIST_LAT = 150  # mm
-        self.AVOID_DIST_FRONT = 400  # mm
-        self.AVOID_SPEED_LAT = 0.2
-        self.AVOID_SPEED_FRONT = 0.5
-        self.FORWARD_SPEED = 0.3
-
-        self.right_p = -1
-        self.left_p = 1
-        self.avoid_dir = self.right  # initial avoid direction
-        self.prev_speed = 69
-
-        # limites qui vont changer la direction d'évitement
-        self.limit_lat_left = 0.5
-        self.limit_lat_right = -0.5
 
         # Variables et types correspondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
@@ -213,6 +195,10 @@ class Drone(MotionCommander):
 
         self.position_estimate[0] = self.get_log('stateEstimate.x')
         self.position_estimate[1] = self.get_log('stateEstimate.y')
+
+    def update_slam(self):
+        self.refresh_logs()
+        self.slam.slam_update(self.range_sensors, self.position_estimate)
 
     def get_time(self):
         return self.__time
