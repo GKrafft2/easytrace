@@ -13,6 +13,7 @@ from cflib.utils import uri_helper
 from drone import Drone
 from arena import arena
 from p_crossing import avoid
+from p_crossing import Direction
 
 def edge_detection(drone:Drone):
 
@@ -60,7 +61,7 @@ def main_search_platform(drone:Drone):
     drone.height_cmd = 0.4
     edge_detected = 0
 
-    edge_detected = move(drone, arena.LIM_WEST - position_estimate[1], direction_y=1)
+    edge_detected = move(drone, arena.LIM_WEST - position_estimate[1], position_estimate[0], direction_y=1)
     if edge_detected:
         fly = 0
 
@@ -73,24 +74,30 @@ def main_search_platform(drone:Drone):
             fly = 0
 
         # avance de 10cm
-        edge_detected = move(drone, distance_x, direction_x=1)
+        edge_detected = move(drone, distance_x, position_estimate[1], direction_x=1)
         if edge_detected:
             fly = 0
         # va au bord droite
-        edge_detected = move(drone, distance_y, direction_y=-1)
+        position_estimate[0] = drone.get_log('stateEstimate.x')
+        position_estimate[1] = drone.get_log('stateEstimate.y')
+        edge_detected = move(drone, distance_y, position_estimate[0], direction_y=-1)
         if edge_detected:
             fly = 0
         # avance de 10cm
-        edge_detected = move(drone, distance_x, direction_x=1)
+        position_estimate[0] = drone.get_log('stateEstimate.x')
+        position_estimate[1] = drone.get_log('stateEstimate.y')
+        edge_detected = move(drone, distance_x, position_estimate[1], direction_x=1)
         if edge_detected:
             fly = 0
         
         # va au bord gauche
-        edge_detected = move(drone, distance_y, direction_y=1)
+        position_estimate[0] = drone.get_log('stateEstimate.x')
+        position_estimate[1] = drone.get_log('stateEstimate.y')
+        edge_detected = move(drone, distance_y, position_estimate[0], direction_y=1)
         if edge_detected:
             fly = 0
 
-def move(drone:Drone, distance, direction_x=0, direction_y=0, speed_x=0.2, speed_y=0.2):
+def move(drone:Drone, distance, line_position, direction_x=0, direction_y=0, speed_x=0.2, speed_y=0.2):
     # direction_x: avant=1, arrière=-1
     # direction_y: droite=-1, gauche=1
     position_estimate = [0, 0]
@@ -105,30 +112,38 @@ def move(drone:Drone, distance, direction_x=0, direction_y=0, speed_x=0.2, speed
     edge_detected = 0
     drone.start_linear_motion(direction_x*speed_x, direction_y*speed_y, 0)
     while(not reach and not edge_detected):
-        edge_detected, _, _ = edge_detection(drone)
-
+        # edge_detected, _, _ = edge_detection(drone)
+        drone.stop_by_hand()
         position_estimate[0] = drone.get_log('stateEstimate.x')
         position_estimate[1] = drone.get_log('stateEstimate.y')
-        print(f'x = {position_estimate[0]:.2f}  y = {position_estimate[1]:.2f} {(start_position[1] + distance):.2f}')
+        # print(f'x = {position_estimate[0]:.2f}  y = {position_estimate[1]:.2f} {(start_position[1] + distance):.2f}')
 
         if not direction_y and direction_x == 1:
             if abs(start_position[0] + distance)<position_estimate[0]:
                 reach = 1
                 drone.stop()
+            speed_x, speed_y = avoid(drone, line_position, Direction.FORWARD)
+            drone.start_linear_motion(speed_x, speed_y, 0)
         if not direction_y and direction_x == -1:
             if abs(start_position[0] + direction_x*distance)>position_estimate[0]:
                 reach = 1
                 drone.stop()
+            speed_x, speed_y = avoid(drone, line_position, Direction.BACKWARD)
+            drone.start_linear_motion(speed_x, speed_y, 0)
         if not direction_x and direction_y == 1:
             if abs(start_position[1] + distance)<position_estimate[1]:
                 reach = 1
                 drone.stop()
+            speed_x, speed_y = avoid(drone, line_position, Direction.LEFT)
+            drone.start_linear_motion(speed_x, speed_y, 0)
         if not direction_x and direction_y == -1:
             if abs(start_position[1] + direction_y*distance)>position_estimate[1]:
                 reach = 1
                 drone.stop()
+            speed_x, speed_y = avoid(drone, line_position, Direction.RIGHT)
+            drone.start_linear_motion(speed_x, speed_y, 0)
         
-        time.sleep(0.05)
+        time.sleep(0.1)
     return edge_detected
 
 
