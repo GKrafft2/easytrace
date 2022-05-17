@@ -73,9 +73,9 @@ class Drone(MotionCommander):
         # stateEstimate 'float' [m] (x, y, z, ...)
         # range 'uint16_t' [mm] (up, front, left, ...)
         self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
-                               'range.front', 'range.back', 'range.left', 'range.right', 'range.up']
+                               'range.front', 'range.back', 'range.left', 'range.right', 'range.up','range.zrange']
         self._logs_variables_type = ['float', 'float', 'float',
-                                     'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t']
+                                     'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t','uint16_t']
 
         # Variables à enregistrer
         self.logconf = LogConfig(name='Stabilizer', period_in_ms=10)

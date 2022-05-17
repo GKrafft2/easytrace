@@ -20,21 +20,24 @@ def edge_detection(drone:Drone):
     # Alias pour les logs de drone estimate.x estimate.y et estimate.z
     # Permet de garder les mêmes valeurs durant un passage complet de boucle
     # Un appel direct aux logs peut être actualisé entre temps
-    position_estimate = [0, 0, 0]
+    position_estimate = [0, 0, 0, 0]
     edge_detected = False
 
     position_estimate[0] = drone.get_log('stateEstimate.x') 
     position_estimate[1] = drone.get_log('stateEstimate.y')
     position_estimate[2] = drone.get_log('stateEstimate.z')
+    position_estimate[3] = drone.get_log('range.zrange')
 
     # Tableau "circulaire" des 5 derniers logs de estimate.z qui sont plus élevé que default_height
     if position_estimate[2] > drone.height_cmd-0.02:
         drone.zrange = np.append(drone.zrange, position_estimate[2])
         drone.zrange = drone.zrange[1:]
+        #print(drone.zrange)
 
     # Détecte un changement de hauteur selon le threshold = détection de la plateforme
-    THRESH = 0.013
+    THRESH = 0.03
     moy = np.mean(drone.zrange[:-1])
+    print(moy-drone.zrange[-1])
     if moy > drone.height_cmd-0.05 and (drone.zrange[-1] < moy - THRESH or drone.zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
         #le mode landing est activé
         print("edge found")
@@ -52,6 +55,10 @@ def main_search_platform(drone:Drone):
     position_estimate = [0, 0]
     position_estimate[0] = drone.get_log('stateEstimate.x')
     position_estimate[1] = drone.get_log('stateEstimate.y')
+
+    start_position = [0, 0]
+    start_position[0] = drone.get_log('stateEstimate.x')
+    start_position[1] = drone.get_log('stateEstimate.y')
     OFFSET_X = 0.3
     fly = 1
 
@@ -61,7 +68,7 @@ def main_search_platform(drone:Drone):
     drone.height_cmd = 0.4
     edge_detected = 0
 
-    edge_detected = move(drone, arena.LIM_WEST - position_estimate[1], position_estimate[0], direction_y=1)
+    edge_detected = move(drone, arena.LIM_WEST - position_estimate[1], position_estimate[0], direction_x=1)
     if edge_detected:
         fly = 0
 
@@ -74,10 +81,12 @@ def main_search_platform(drone:Drone):
             fly = 0
 
         # avance de 10cm
-        edge_detected = move(drone, distance_x, position_estimate[1], direction_x=1)
+        edge_detected = move(drone, distance_x, position_estimate[1], start_position, direction_x=1)
         if edge_detected:
             fly = 0
         # va au bord droite
+        start_position[0] = drone.get_log('stateEstimate.x')
+        start_position[1] = drone.get_log('stateEstimate.y')
         position_estimate[0] = drone.get_log('stateEstimate.x')
         position_estimate[1] = drone.get_log('stateEstimate.y')
         edge_detected = move(drone, distance_y, position_estimate[0], direction_y=-1)
@@ -86,7 +95,7 @@ def main_search_platform(drone:Drone):
         # avance de 10cm
         position_estimate[0] = drone.get_log('stateEstimate.x')
         position_estimate[1] = drone.get_log('stateEstimate.y')
-        edge_detected = move(drone, distance_x, position_estimate[1], direction_x=1)
+        edge_detected = move(drone, distance_x, position_estimate[1], start_position, direction_x=1)
         if edge_detected:
             fly = 0
         
@@ -97,16 +106,16 @@ def main_search_platform(drone:Drone):
         if edge_detected:
             fly = 0
 
-def move(drone:Drone, distance, line_position, direction_x=0, direction_y=0, speed_x=0.2, speed_y=0.2):
+def move(drone:Drone, distance, line_position, start_position = [0, 0], direction_x=0, direction_y=0, speed_x=0.2, speed_y=0.2):
     # direction_x: avant=1, arrière=-1
     # direction_y: droite=-1, gauche=1
     position_estimate = [0, 0]
     position_estimate[0] = drone.get_log('stateEstimate.x')
     position_estimate[1] = drone.get_log('stateEstimate.y')
 
-    start_position = [0, 0]
-    start_position[0] = drone.get_log('stateEstimate.x')
-    start_position[1] = drone.get_log('stateEstimate.y')
+    if (not start_position[0] and not start_position[0]):
+        start_position[0] = drone.get_log('stateEstimate.x')
+        start_position[1] = drone.get_log('stateEstimate.y')
 
     reach = 0
     edge_detected = 0
@@ -122,7 +131,7 @@ def move(drone:Drone, distance, line_position, direction_x=0, direction_y=0, spe
         position_estimate[1] = drone.get_log('stateEstimate.y')
         # print(f'x = {position_estimate[0]:.2f}  y = {position_estimate[1]:.2f} {(start_position[1] + distance):.2f}')
 
-        drone.update_slam
+        drone.update_slam()
         if not direction_y and direction_x == 1:
             if abs(start_position[0] + distance)<position_estimate[0]:
                 reach = 1
@@ -150,69 +159,6 @@ def move(drone:Drone, distance, line_position, direction_x=0, direction_y=0, spe
         
         time.sleep(0.1)
     return edge_detected
-
-
-
-# def search(drone:Easytrace):
-#     #search zone
-#     CORNER = [[0,0.5],[0,1]]
-
-#     start_position = [0, 0]
-#     start_position[0] = drone.get_log('stateEstimate.x')
-#     start_position[1] = drone.get_log('stateEstimate.y')
-
-#     position_estimate = [0, 0]
-#     position_estimate[0] = drone.get_log('stateEstimate.x')
-#     position_estimate[1] = drone.get_log('stateEstimate.y')
-#     state = 0
-#     speed_x = [0,0.1,0,0.1]
-#     speed_y = [0.2,0,-0.2,0]
-#     ERROR = 0.02
-
-#     pos_y_goal = [CORNER[1][0]]
-#     OFFSET_X = 0.1
-#     fly = 1
-
-#     while(fly):
-#         start_position[0] = drone.get_log('stateEstimate.x')
-#         start_position[1] = drone.get_log('stateEstimate.y')
-#         drone.start_linear_motion(speed_x[state], speed_y[state], 0)
-#         pos_reach = 0
-#         while(not pos_reach):
-#             position_estimate[0] = drone.get_log('stateEstimate.x')
-#             position_estimate[1] = drone.get_log('stateEstimate.y')
-#             # print(position_estimate[1])
-#             print(position_estimate[0])
-#             # va au bord gauche
-#             if state == 0:
-#                 if abs(position_estimate[1] - CORNER[1][1])<ERROR:
-#                     pos_reach = 1
-#                     state = 1
-
-#             # avance de 10cm
-#             if state == 1:
-#                 if (start_position[0] + OFFSET_X) > CORNER[0][1]:
-#                     pos_reach = 1
-#                     fly = 0
-#                 if abs(start_position[0] + OFFSET_X) < position_estimate[0]:
-#                     pos_reach = 1
-#                     state = 2
-
-#             # va au bord droite
-#             if state == 2:
-#                 if abs(position_estimate[1] - CORNER[1][0])<ERROR:
-#                     pos_reach = 1
-#                     state = 3
-
-#             # avance de 10cm
-#             if state == 3:
-#                 if (start_position[0] + OFFSET_X) > CORNER[0][1]:
-#                     pos_reach = 1
-#                     fly = 0
-#                 if abs(start_position[0] + OFFSET_X)<position_estimate[0]:
-#                     pos_reach = 1
-#                     state = 0
-
 
 
 
