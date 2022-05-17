@@ -135,11 +135,9 @@ def avoid(drone:Drone, line_position, direction:Direction):
     if drone.obstacle_wait == False:
         correction = 0
         if position_estimate[1] > line_position + POSITION_DIRECTION_THRESH:
-            print(f'Pos estimate > : {position_estimate[1]:.3f}')
             speed_east =  RIGHT * AVOID_SPEED_COME_BACK
         elif position_estimate[1] < line_position - POSITION_DIRECTION_THRESH:
             speed_east =  LEFT * AVOID_SPEED_COME_BACK
-            print(f'Pos estimate < : {position_estimate[1]:.3f}')
         else:
             speed_east = 0
         print(speed_east)
@@ -159,9 +157,6 @@ def avoid(drone:Drone, line_position, direction:Direction):
         speed_x, speed_y = -speed_east, speed_north
     elif direction == Direction.RIGHT:
         speed_x, speed_y = speed_east, -speed_north
-        print("\n")
-        print(f'Speed east {speed_east}')
-        print(speed_north)
     elif direction == Direction.BACKWARD:
         speed_x, speed_y = -speed_north, -speed_east
     
