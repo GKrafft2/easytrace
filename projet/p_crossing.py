@@ -30,7 +30,7 @@ def avoid(drone:Drone, line_position, direction:Direction):
     """ avoid obstacle live
         Param: line_position the y line to follow from drone origin """
 
-    AVOID_DIST_LAT = 150  #mm
+    # AVOID_DIST_LAT = 150  #mm
     AVOID_DIST_FRONT = 400  # mm
     AVOID_SPEED_LAT = 0.5
     AVOID_SPEED_COME_BACK = 0.25
@@ -102,6 +102,7 @@ def avoid(drone:Drone, line_position, direction:Direction):
         AVOID_DIST_LAT = 50
     else:
         AVOID_DIST_LAT = 160
+
 
     # ====== évitement latéral =======
     if range_sensors[2] < AVOID_DIST_LAT:  # obstacle détecté à gauche
@@ -225,5 +226,6 @@ if __name__ == '__main__':
         main_crossing(drone)
 
         drone.land()
+        drone.slam.slam_hold()
 
         drone.stop_logs(save=False)
