@@ -69,22 +69,6 @@ class Drone(MotionCommander):
         self.obstacle_wait = False
         self.default_direction = -1
 
-        # constantes pour l'évitement
-        self.AVOID_DIST_LAT = 150  # mm
-        self.AVOID_DIST_FRONT = 400  # mm
-        self.AVOID_SPEED_LAT = 0.2
-        self.AVOID_SPEED_FRONT = 0.5
-        self.FORWARD_SPEED = 0.3
-
-        self.right_p = -1
-        self.left_p = 1
-        self.avoid_dir = self.right  # initial avoid direction
-        self.prev_speed = 69
-
-        # limites qui vont changer la direction d'évitement
-        self.limit_lat_left = 0.5
-        self.limit_lat_right = -0.5
-
         # Variables et types correspondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
         # range 'uint16_t' [mm] (up, front, left, ...)

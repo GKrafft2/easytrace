@@ -181,6 +181,9 @@ def start_zone_2_check(drone:Drone):
 def main_crossing(drone:Drone):
     fly = True
 
+    #le drone suit la ligne au centre de l'arène
+    central_line = arena.ORIGIN_Y - arena.WIDTH/2
+
     while(fly):        
         drone.stop_by_hand()
         arrival = start_zone_2_check(drone)
