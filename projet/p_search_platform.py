@@ -1,11 +1,6 @@
-import logging
-import sys
-import os
 
 # Libraries python
 import time
-import datetime as dt
-from threading import Event
 import numpy as np
 
 # Libraries crazyflie
@@ -46,7 +41,7 @@ def edge_detection(drone:Drone):
     # retourne la position position détectée
     return edge_detected, position_estimate[0], position_estimate[1]
 
-def search(drone:Drone):
+def main_search_platform(drone:Drone):
     
     #search zone
     CORNER = [[0,0.5],[0,1]]
@@ -208,7 +203,7 @@ if __name__ == '__main__':
         drone.take_off()
 
         # fly_while_avoid(drone)
-        search(drone)
+        main_search_platform(drone)
 
         print("land")
         drone.land()

@@ -15,7 +15,7 @@ from drone import Drone
 
 # parties du projet
 from p_crossing import main_crossing
-from p_search_platform import main_search_platfrom
+from p_search_platform import main_search_platform
 from p_land_platform import main_land_platform
 from p_back_home import main_back_home
 
@@ -33,7 +33,6 @@ if __name__ == '__main__':
         drone = Drone(scf, default_height=0.4)
         
         drone.start_logs()
-
         main_crossing()
         main_search_platform()
         main_land_platform()
