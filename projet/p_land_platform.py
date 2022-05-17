@@ -49,7 +49,7 @@ def search_edge_infinite(drone:Drone, speed_x, speed_y):
             print(zrange)
 
         # Détecte un changement de hauteur selon le threshold = détection de la plateforme
-        THRESH = 0.013
+        THRESH = 0.012
         moy = np.mean(zrange[:-1])
         if moy > flight_height-0.05 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
             #le mode landing est activé
@@ -183,7 +183,7 @@ def procedure1(drone:Drone):
     """ Cherche la première arête, puis se déplace vers la droite pour chercher la seconde arrête"""
     drone.take_off()
     platform.x_start, _ = search_edge_infinite(drone, 0.2, 0)
-    drone.move_distance(0.15, 0, 0, 0.3) # avance un peu au centre de la plateforme
+    drone.move_distance(0.25, 0, 0, 0.3) # avance un peu au centre de la plateforme
     time.sleep(2)
     drone.move_distance(0, 0.6, 0, 0.2)
     time.sleep(2)        
@@ -191,7 +191,7 @@ def procedure1(drone:Drone):
     land_on_platform(drone)
     time.sleep(2)
     drone.take_off(1)
-    time.sleep(3)
+    time.sleep(1)
     drone.land()
 
 def main_land_platform(drone:Drone):
@@ -201,10 +201,10 @@ def main_land_platform(drone:Drone):
     time.sleep(1)
 
     # avance tout droit jusqu'à la boite
-    platform.x_start, platform.y_start = search_edge_infinite(drone, 0.2, 0)
+    platform.x_start, platform.y_start = search_edge_infinite(drone, 0.25, 0)
     print(f'Début plateforme x = {platform.x_start:.4f}, y = {platform.y_start:.4f}')
     # avance encore tout en continuant de détecter les edges
-    edge_detected, edge_x_position, edge_y_position = search_edge_timed(drone, 0.2, 0, 0.18)
+    edge_detected, edge_x_position, edge_y_position = search_edge_timed(drone, 0.2, 0, 0.3)
     # stop le drone avec petit coup en arrière pour ne pas drifter
     drone.stop_brutal()
     # si aucun edge n'est détecté, ingore les variables de second edge
@@ -248,7 +248,7 @@ def landing_level_1(y_difference):
         print("going right with a")
         drone.right(distance, speed)
         direction_moved = 1
-    elif y_difference > 0.02:
+    elif y_difference > 0.025:
         print("going left with b")
         print(y_difference)
         drone.left(distance, speed)
@@ -258,7 +258,7 @@ def landing_level_1(y_difference):
         print("going left with a")
         drone.left(distance, speed)
         direction_moved = -1
-    elif y_difference < -0.02:
+    elif y_difference < -0.025:
         print("going right with b")
         print(y_difference)
         drone.right(distance, speed)
@@ -354,7 +354,8 @@ if __name__ == '__main__':
         # while(True):
         #     print(drone.get_log('stateEstimate.y'))
 
-        main_land_platform(drone)
+        # main_land_platform(drone)
+        procedure1(drone)
 
         # drone.go_to(x=1, y=-0.3, z=1.5)
 

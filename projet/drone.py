@@ -291,7 +291,7 @@ class Drone(MotionCommander):
             sys.exit()
 
     def stop_brutal(self):
-        self.start_back(0.3)
+        self.start_back(0.25)
         time.sleep(0.3)
         self.stop()
         time.sleep(0.5)

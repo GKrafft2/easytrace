@@ -112,7 +112,11 @@ def move(drone:Drone, distance, line_position, direction_x=0, direction_y=0, spe
     edge_detected = 0
     drone.start_linear_motion(direction_x*speed_x, direction_y*speed_y, 0)
     while(not reach and not edge_detected):
-        # edge_detected, _, _ = edge_detection(drone)
+        # empêche la détection de la plateform par le côté latéral du drone
+        # on ne détecte que quand le drone va droit de manière stable
+        if drone.on_track:
+            edge_detected, _, _ = edge_detection(drone)
+            
         drone.stop_by_hand()
         position_estimate[0] = drone.get_log('stateEstimate.x')
         position_estimate[1] = drone.get_log('stateEstimate.y')
