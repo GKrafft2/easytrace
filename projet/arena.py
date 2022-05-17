@@ -22,6 +22,9 @@ class arena():
     ORIGIN_X = 0.3        # DEPUIS LE BAS !!!!
     ORIGIN_Y = 1      # DEPUIS LA DROITE !!!!
 
+    # Distance de la zone d'arrivée
+    START_ZONE_2 = LENGTH - REGION_LENGTH - ORIGIN_X
+
     # Limites de l'arène [m], à partir de la plateforme
     LIM_EAST = - ORIGIN_Y
     LIM_WEST = WIDTH - ORIGIN_Y

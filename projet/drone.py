@@ -54,8 +54,8 @@ class Drone(MotionCommander):
         self.y = 0
         self.z_cmd = 0
 
-        # Temps
-        self.__time = self.update_time()
+        # Temps (container pour sauvegarder le temps)
+        self.time1 = 0
 
         # sensor variables
         self.range_sensors = np.empty(5)
@@ -325,71 +325,6 @@ class Drone(MotionCommander):
         # execute Motion Commander method
         super(Drone, self).land(velocity)
 
-    # ============ AVOIDING FUNCTIONS ==============
-
-    # gauche droite sont définis par rapport à la direction dans laquelle le drone va
-    # fonction pour cross le terrain (avant/arrière)
-    def crossing_avoid(self, front):
-
-        # -- évitement latéral --
-        if self.get_log('range.left') < self.AVOID_DIST_LAT:  # obstacle détecté à gauche
-            speed_y_lat = -self.AVOID_SPEED_LAT
-        elif self.get_log('range.right') < self.AVOID_DIST_LAT:  # obstacle détecté à droite
-            speed_y_lat = self.AVOID_SPEED_LAT
-        else:
-            speed_y_lat = 0
-        # --------------------------
-
-        # allé : limit_lat_left = 0.5m // limit_lat_right = 0.5m
-        # spirale : meme que pour allé
-
-        # -- évitement frontal -----
-        if front:  # le drone va en avant
-            dist = self.get_log('range.front')
-        else:  # le drone va en arrière
-            dist = self.get_log('range.back')
-
-        if dist < self.AVOID_DIST_FRONT:
-            # print("obstacle frontal !")
-
-            # change la direction si le drone est trop a droite ou a gauche
-            if self.get_log('stateEstimate.y') > self.limit_lat_left:  # trop a gauche doit éviter par la droite
-                self.avoid_dir = self.right
-            elif self.get_log('stateEstimate.y') < self.limit_lat_right:  # trop a droite doit éviter par la gauche
-                self.avoid_dir = self.left
-
-            # if self.avoid_dir == self.left and self.get_log('range.left') < self.AVOID_DIST_LAT : #veut éviter par la gauche mais il y a un obstacle sur la gauche
-            #     self.avoid_dir = self.right
-            # elif self.avoid_dir == self.left and self.get_log('range.right') < self.AVOID_DIST_LAT : #veut éviter par la droite mais il y a un obstacle a droite
-            #     self.avoid_dir = self.right
-
-            speed_y_front = self.avoid_dir * self.AVOID_SPEED_FRONT
-        else:
-            # print('aucun obstacle frontal')
-            speed_y_front = 0
-
-        # --------------------------
-        if speed_y_front != 0 and speed_y_lat != 0:
-            print(f'speed lat : {speed_y_lat} speed front : {speed_y_front}')
-        speed_y = (speed_y_lat + speed_y_front)
-
-        if speed_y_front * speed_y_lat < 0: # (les deux vitesses sont opposées il y a un obstacle qui fait chier)
-            print('obstacle du coté ou on veut éviter frontalement')
-
-        if speed_y != 0:
-            correction = self.FORWARD_SPEED / 2  # correction pour aller plus lentement quand il y a des obstacles
-        else:
-            correction = 0
-
-        if self.prev_speed != speed_y: # met a jour la commande que si elle est différente de la précédente
-            # print(f'maj de la vitesse avec une speed y = {speed_y}')
-            if front:  # le drone va en avant
-                self.start_linear_motion(self.FORWARD_SPEED-correction, speed_y, 0)
-            else:  # le drone va en arrière
-                self.start_linear_motion(-(self.FORWARD_SPEED-correction), speed_y, 0)
-            time.sleep(0.15) # set la refresh rate de l'évitement / laisse le temps au drone d effectuer le changement de direction
-
-        self.prev_speed = speed_y
 
     def spiral_search(self):
         spiral_y = [1.5, -1.5, 1.2, -1.2, 0.9]
