@@ -119,10 +119,10 @@ def avoid(drone:Drone, line_position, direction:Direction):
     # ====== évitement frontal ========
     if range_sensors[0] < AVOID_DIST_FRONT:
         drone.obstacle_frontal = True
-        if position_estimate[1] > line_position + 0.4:  # trop a gauche doit éviter par la droite
+        if position_estimate[1] > line_position + 1:  # trop a gauche doit éviter par la droite
             avoid_dir = RIGHT
             drone.default_direction = RIGHT
-        elif position_estimate[1] < line_position - 0.4:  # trop a droite doit éviter par la gauche
+        elif position_estimate[1] < line_position - 1:  # trop a droite doit éviter par la gauche
             avoid_dir = LEFT
             drone.default_direction = LEFT
 
