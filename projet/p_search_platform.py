@@ -55,8 +55,8 @@ def main_search_platform(drone:Drone):
     OFFSET_X = 0.3
     fly = 1
 
-    distance_y = 1
-    distance_x = 0.2
+    distance_y = 1.5
+    distance_x = 0.3
     # drone.height_cmd = drone.get_log('stateEstimate.z')
     drone.height_cmd = 0.4
     edge_detected = 0
@@ -118,6 +118,7 @@ def move(drone:Drone, distance, line_position, direction_x=0, direction_y=0, spe
         position_estimate[1] = drone.get_log('stateEstimate.y')
         # print(f'x = {position_estimate[0]:.2f}  y = {position_estimate[1]:.2f} {(start_position[1] + distance):.2f}')
 
+        drone.update_slam
         if not direction_y and direction_x == 1:
             if abs(start_position[0] + distance)<position_estimate[0]:
                 reach = 1
@@ -230,5 +231,7 @@ if __name__ == '__main__':
 
         print("land")
         drone.land()
+
+        drone.slam.slam_hold()
 
         drone.stop_logs(save=False)
