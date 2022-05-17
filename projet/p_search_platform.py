@@ -11,6 +11,8 @@ from cflib.utils import uri_helper
 
 # Libraries personnelles
 from drone import Drone
+from arena import arena
+from p_crossing import avoid
 
 def edge_detection(drone:Drone):
 
@@ -58,6 +60,10 @@ def main_search_platform(drone:Drone):
     drone.height_cmd = 0.4
     edge_detected = 0
 
+    edge_detected = move(drone, arena.LIM_WEST - position_estimate[1], direction_y=1)
+    if edge_detected:
+        fly = 0
+
     while(fly):
         position_estimate[0] = drone.get_log('stateEstimate.x')
         position_estimate[1] = drone.get_log('stateEstimate.y')
@@ -66,10 +72,6 @@ def main_search_platform(drone:Drone):
         if (position_estimate[0] + OFFSET_X) > CORNER[0][1]:
             fly = 0
 
-        # va au bord gauche
-        edge_detected = move(drone, distance_y, direction_y=1)
-        if edge_detected:
-            fly = 0
         # avance de 10cm
         edge_detected = move(drone, distance_x, direction_x=1)
         if edge_detected:
@@ -80,6 +82,11 @@ def main_search_platform(drone:Drone):
             fly = 0
         # avance de 10cm
         edge_detected = move(drone, distance_x, direction_x=1)
+        if edge_detected:
+            fly = 0
+        
+        # va au bord gauche
+        edge_detected = move(drone, distance_y, direction_y=1)
         if edge_detected:
             fly = 0
 
@@ -99,6 +106,7 @@ def move(drone:Drone, distance, direction_x=0, direction_y=0, speed_x=0.2, speed
     drone.start_linear_motion(direction_x*speed_x, direction_y*speed_y, 0)
     while(not reach and not edge_detected):
         edge_detected, _, _ = edge_detection(drone)
+
         position_estimate[0] = drone.get_log('stateEstimate.x')
         position_estimate[1] = drone.get_log('stateEstimate.y')
         print(f'x = {position_estimate[0]:.2f}  y = {position_estimate[1]:.2f} {(start_position[1] + distance):.2f}')
