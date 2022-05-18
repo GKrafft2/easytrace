@@ -17,108 +17,6 @@ from p_search_platform import edge_detection
 
 
 
-def search_edge_infinite(drone:Drone, speed_x, speed_y):
-    print("METHOD : search_edge")
-
-    # Alias pour les logs de drone estimate.x estimate.y et estimate.z
-    # Permet de garder les mêmes valeurs durant un passage complet de boucle
-    # Un appel direct aux logs peut être actualisé entre temps
-    position_estimate = [0, 0, 0]
-
-    zrange = np.zeros(5)
-    box_found = False
-    flight_height = drone.get_log('stateEstimate.z')
-
-    # # Assure d'être à 40cm de hauteur pour chercher la platform
-    # LANDING_HEIGHT = 0.4
-    # if drone.height_cmd != LANDING_HEIGHT:
-    #     drone.go_to_up(LANDING_HEIGHT)
-
-    while(not box_found):
-
-        # Met à jour les vitesses de déplacement
-        drone.start_linear_motion(speed_x, speed_y, 0)
-        # time.sleep(1)
-        position_estimate[0] = drone.get_log('stateEstimate.x') 
-        position_estimate[1] = drone.get_log('stateEstimate.y')
-        position_estimate[2] = drone.get_log('stateEstimate.z')
-
-        # Tableau "circulaire" des 5 derniers logs de estimate.z qui sont plus élevé que default_height
-        if position_estimate[2] > flight_height-0.02:
-            zrange = np.append(zrange, position_estimate[2])
-            zrange = zrange[1:]
-            print(zrange)
-
-        # Détecte un changement de hauteur selon le threshold = détection de la plateforme
-        THRESH = 0.03
-        moy = np.mean(zrange[:-1])
-        if moy > flight_height-0.05 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
-            #le mode landing est activé
-            print(flight_height, "flight height")
-            print(moy, "moy")
-            print("edge found")
-            box_found = True
-            drone.stop()
-        
-        # Délai très important ! (faut le temps que les commandes soient envoyées au drone)
-        time.sleep(0.1)
-
-    # retourne la position position détectée
-    return position_estimate[0], position_estimate[1]
-
-def search_edge_timed(drone:Drone, speed_x, speed_y, distance):
-    """ Avance une certaine distance tout en détectant un potentiel edge """
-    print("METHOD : move_and_search_edge")
-
-    # Alias pour les logs de drone estimate.x estimate.y et estimate.z
-    # Permet de garder les mêmes valeurs durant un passage complet de boucle
-    # Un appel direct aux logs peut être actualisé entre temps
-    position_estimate = [0, 0, 0]
-
-    zrange = np.zeros(5)
-    edge_detected = False
-    edge_x_position = 0
-    edge_y_position = 0
-    drone.speed_x_cmd = speed_x
-    drone.speed_y_cmd = speed_y
-    flight_height = drone.get_log('stateEstimate.z')
-
-    # calcule le temps de vole
-    speed = np.sqrt(speed_x**2 + speed_y**2)
-    fly_time = distance/speed
-    
-    # Met à jour les vitesses de déplacement
-    drone.start_linear_motion(speed_x, speed_y, 0)
-    start_time = time.time_ns()
-    # vole pour un temps donné
-    while(int(fly_time*1e9) > time.time_ns()-start_time):
-
-        # time.sleep(1)
-        position_estimate[0] = drone.get_log('stateEstimate.x') 
-        position_estimate[1] = drone.get_log('stateEstimate.y')
-        position_estimate[2] = drone.get_log('stateEstimate.z')
-
-        # N'enregister les valeurs que quand on vole à la hauteur défini au début de la fonction
-        if position_estimate[2] > flight_height-0.02 :
-            zrange = np.append(zrange, position_estimate[2])
-            zrange = zrange[1:]
-
-        # Détecte un changement de hauteur selon le threshold = détection de la plateforme
-        THRESH = 0.015
-
-        moy = np.mean(zrange[:-1])
-        if moy > flight_height-0.05 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH) and not edge_detected: #detecte si on est passé au dessus de qqch (plateforme)
-            #le mode landing est activé
-            print("edge found")
-            edge_detected = True
-            edge_x_position = position_estimate[0]
-            edge_y_position = position_estimate[1]
-        
-        # Délai très important ! (faut le temps que les commandes soient envoyées au drone)
-        time.sleep(0.1)
-
-    # retourne la position position détectée
-    return edge_detected, edge_x_position, edge_y_position
 
 def go_to_P(drone:Drone, x, y):
     print("METHOD : land_on_platform")
@@ -201,8 +99,13 @@ def procedure1(drone:Drone):
 
     # cherche le bord 2 de la plateforme
     fly = True
+    position_history = drone.get_log('stateEstimate.y')
     while(fly):
-        drone.start_linear_motion(0, -0.1, 0)
+        if drone.get_log('stateEstimate.y') < position_history - 0.35:
+            drone.start_linear_motion(0, 0.1, 0)
+            position_history = -100
+        else:
+            drone.start_linear_motion(0, -0.1, 0)
         drone.stop_by_hand()
         edge_detected, _, y = edge_detection(drone, height=0.2, threshold=0.05)
         # attends une seconde de stabilisation avant d'accepter les edges
@@ -255,47 +158,6 @@ def main_land_platform(drone:Drone):
             end = True
         else:
             direction_moved = 0
-
-
-
-def landing_level_1(y_difference):
-    # ===== LEVEL 1 =======
-    # Calcule la pente (tendance) de déviation de la position y depuis que la plateforme est détectée
-    history = 200
-    y_estimate = drone.get_log('stateEstimate.y', history, array=True)
-    t_array = np.linspace(0, history, history)
-    a, _ = np.polyfit(t_array, y_estimate, 1)
-    print(f'a = {a:.4e}')
-
-    # variable de direction prise (0 tout droit, 1 droit, -1 gauche)
-    direction_moved = 0
-    
-    # A partir de la tendance, si elle est trop élevée, corrige la position
-    # double vérif : tendance de déviation en z et déviation aboslue entre le 1er et 2ème edge
-    # trop à gauche
-    distance = 0.15
-    speed = 0.2
-    if a > 2e-4:
-        print("going right with a")
-        drone.right(distance, speed)
-        direction_moved = 1
-    elif y_difference > 0.025:
-        print("going left with b")
-        print(y_difference)
-        drone.left(distance, speed)
-        direction_moved = 1
-    # trop à droite
-    elif a < -2e-4:
-        print("going left with a")
-        drone.left(distance, speed)
-        direction_moved = -1
-    elif y_difference < -0.025:
-        print("going right with b")
-        print(y_difference)
-        drone.right(distance, speed)
-        direction_moved = -1
-    
-    return direction_moved
 
     
 def landing_level_2(direction_moved):
