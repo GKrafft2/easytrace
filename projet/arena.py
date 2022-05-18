@@ -1,5 +1,5 @@
 
-class platform():
+class Platform():
     """ Dimensions [m] de la plateforme de départ et arrivée """
     SIZE = 0.3 # même largeur et profondeur
     HEIGHT = 0.1
@@ -7,7 +7,7 @@ class platform():
     # x_start = 0 # emplacement x trouvé de la boite 2
     # y_start = 0 # emplacement y trouvé de la boite 2
 
-class arena():
+class Arena():
     """ Dimension en [m] l'arène """
     
     # Dimension absolue, origine bas droite
@@ -32,5 +32,9 @@ class arena():
     LIM_UP = 2
     LIM_DOWN = 0
 
-
+class Direction():
+    FORWARD = 0
+    RIGHT = 1
+    LEFT = 2
+    BACKWARD = 3
 

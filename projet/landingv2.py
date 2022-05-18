@@ -11,7 +11,7 @@ from cflib.utils import uri_helper
 
 # Libraries personnelles
 from drone import Drone
-from arena import arena
+from Arena import Arena
 from p_crossing import avoid
 from p_crossing import Direction
 

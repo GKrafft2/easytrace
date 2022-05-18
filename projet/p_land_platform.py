@@ -14,15 +14,9 @@ from cflib.utils import uri_helper
 
 # Libraries personnelles
 from drone import Drone
-from arena import arena, platform
+from arena import Arena, Platform
 from p_crossing import Direction
 
-
-# class Direction(Enum):
-    # FORWARD = 0
-    # RIGHT = 1
-    # LEFT = 2
-    # BACKWARD = 3
 
 
 def go_to_P(drone:Drone, x, y):
@@ -39,13 +33,13 @@ def go_to_P(drone:Drone, x, y):
 
     print(f'Position drone x = {position_estimate[0]:.3f} y = {position_estimate[1]:.3}')
     print(f'Position box x = {x:.3f} y = {y:.3f}')
-    print(f'Platform start x = {platform.x_start:.3f} y = {platform.y_start:.3f}')
+    print(f'Platform start x = {Platform.x_start:.3f} y = {Platform.y_start:.3f}')
 
     while(fly):
 
         position_estimate[0] = drone.get_log('stateEstimate.x') 
         position_estimate[1] = drone.get_log('stateEstimate.y')
-        # print(f'error {error}')
+
         # essaye de revenir au centre de la boite
         if error > 0.02 :
             landing_speed = -0.1
@@ -54,13 +48,6 @@ def go_to_P(drone:Drone, x, y):
             err_y = (position_estimate[1]-y)
             landing_speed_x = err_x * landing_speed * P
             landing_speed_y = err_y * landing_speed * P
-
-            # anti-windup
-            # if landing_speed_x > 0.2:
-            #     landing_speed_x = 0.2
-            # if landing_speed_y > 0.2:
-            #     landing_speed_y = 0.2
-            # print(landing_speed_x, landing_speed_y)
 
             drone.start_linear_motion(landing_speed_x,landing_speed_y, 0)
             error = np.sqrt(err_x**2+err_y**2)
@@ -71,13 +58,9 @@ def go_to_P(drone:Drone, x, y):
             print('Goal achieved ')
             
             fly = False
-            drone.stop() #  nécessaire si on a déja un drone.land() ?
+            drone.stop()
 
         time.sleep(0.1)
-
-        # print(f'x = {position_estimate[0]:.2f} y = {position_estimate[1]:.2f}')
-
-    time.sleep(0.1)
 
 def edge_detection(drone:Drone, height, threshold):
 

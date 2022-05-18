@@ -17,13 +17,7 @@ from cflib.utils import uri_helper
 
 # Libraries personnelles
 from drone import Drone
-from arena import arena
-
-class Direction(Enum):
-    FORWARD = 0
-    RIGHT = 1
-    LEFT = 2
-    BACKWARD = 3
+from arena import Arena, Direction
 
 
 def avoid(drone:Drone, line_position, direction:Direction):
@@ -176,7 +170,7 @@ def start_zone_2_check(drone:Drone):
 
     arrival = False
 
-    if drone.get_log('stateEstimate.x') >= arena.START_ZONE_2:
+    if drone.get_log('stateEstimate.x') >= Arena.START_ZONE_2:
         arrival = True
 
     return arrival
@@ -186,7 +180,7 @@ def main_crossing(drone:Drone):
     fly = True
 
     #le drone suit la ligne au centre de l'arène
-    central_line = - (arena.ORIGIN_Y - arena.WIDTH/2)
+    central_line = - (Arena.ORIGIN_Y - Arena.WIDTH/2)
     # update de la direction par défault s'il y a un obstacle
     if central_line > 0:
         drone.default_direction = 1

@@ -11,16 +11,18 @@ from typing import Tuple
 from cflib.crazyflie.log import LogConfig
 from cflib.positioning.motion_commander import MotionCommander
 from cflib.utils import uri_helper
-from arena import arena
+from arena import Arena
 
 import numpy as np
 import sys
+from projet.arena import Direction
 from slam import Slam
 
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E702')
 
 # ADMIN: Only output errors from the logging framework
 logging.basicConfig(level=logging.ERROR)
+
 
 
 class Drone(MotionCommander):
@@ -51,6 +53,7 @@ class Drone(MotionCommander):
         # self.x = 0
         # self.y = 0
         self.z_cmd = 0
+        self.direction = Direction.FORWARD
 
         # Temps (container pour sauvegarder le temps)
         self.time1 = 0
@@ -237,18 +240,18 @@ class Drone(MotionCommander):
         """ Vérifie que l'emplacement désiré est autorisé et modifie le cas échéant"""
         xp, yp, zp = x, y, z
 
-        if x > arena.LIM_NORTH:
-            x = arena.LIM_NORTH
-        elif x < arena.LIM_SOUTH:
-            x = arena.LIM_SOUTH
-        if y > arena.LIM_WEST:
-            y = arena.LIM_WEST
-        elif y < arena.LIM_EAST:
-            y = arena.LIM_EAST
-        if z > arena.LIM_UP:
-            z = arena.LIM_UP
-        elif z < arena.LIM_DOWN:
-            z = arena.LIM_DOWN
+        if x > Arena.LIM_NORTH:
+            x = Arena.LIM_NORTH
+        elif x < Arena.LIM_SOUTH:
+            x = Arena.LIM_SOUTH
+        if y > Arena.LIM_WEST:
+            y = Arena.LIM_WEST
+        elif y < Arena.LIM_EAST:
+            y = Arena.LIM_EAST
+        if z > Arena.LIM_UP:
+            z = Arena.LIM_UP
+        elif z < Arena.LIM_DOWN:
+            z = Arena.LIM_DOWN
 
         if xp!=x or yp!=y or zp!=z:
             print("Go to command modified because outside limits, please check")
@@ -265,15 +268,15 @@ class Drone(MotionCommander):
         y = self.get_log('stateEstimate.y')
         z = self.get_log('stateEstimate.z')
 
-        if x > arena.LIM_NORTH or x < arena.LIM_SOUTH:
+        if x > Arena.LIM_NORTH or x < Arena.LIM_SOUTH:
             speed_x = 0
             outside_limits = True
             print("outside x")
-        if y > arena.LIM_WEST or y < arena.LIM_EAST:
+        if y > Arena.LIM_WEST or y < Arena.LIM_EAST:
             speed_y = 0
             outside_limits = True
             print("outside y")
-        if z > arena.LIM_UP or z < arena.LIM_DOWN:
+        if z > Arena.LIM_UP or z < Arena.LIM_DOWN:
             speed_z = 0
             outside_limits = True
             print("outside z")
