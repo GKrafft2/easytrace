@@ -3,8 +3,8 @@ class platform():
     """ Dimensions [m] de la plateforme de départ et arrivée """
     SIZE = 0.3 # même largeur et profondeur
     HEIGHT = 0.1
-    HALF_X = 0.22 # moitié de la boite, adaptée pour la réalité du drone
-    HALF_Y = 0.12
+    HALF_X = 0.15 # moitié de la boite, adaptée pour la réalité du drone
+    HALF_Y = 0.3
     x_start = 0 # emplacement x trouvé de la boite 2
     y_start = 0 # emplacement y trouvé de la boite 2
 

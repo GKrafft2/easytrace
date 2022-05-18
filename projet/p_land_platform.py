@@ -13,6 +13,7 @@ from cflib.utils import uri_helper
 # Libraries personnelles
 from drone import Drone
 from arena import arena, platform
+from p_search_platform import edge_detection
 
 
 
@@ -49,10 +50,12 @@ def search_edge_infinite(drone:Drone, speed_x, speed_y):
             print(zrange)
 
         # Détecte un changement de hauteur selon le threshold = détection de la plateforme
-        THRESH = 0.012
+        THRESH = 0.03
         moy = np.mean(zrange[:-1])
         if moy > flight_height-0.05 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
             #le mode landing est activé
+            print(flight_height, "flight height")
+            print(moy, "moy")
             print("edge found")
             box_found = True
             drone.stop()
@@ -117,27 +120,20 @@ def search_edge_timed(drone:Drone, speed_x, speed_y, distance):
     # retourne la position position détectée
     return edge_detected, edge_x_position, edge_y_position
 
-def land_on_platform(drone:Drone):
+def go_to_P(drone:Drone, x, y):
     print("METHOD : land_on_platform")
 
-    max_vel = 0.2
     error = 1
-
     fly = True
-    speed_x = 0.2
-    speed_y = -0.2
-        
+
     #screenshot de la pos au moment ou il detecte la boite
     position_estimate = [0,0]
     position_estimate[0] = drone.get_log('stateEstimate.x') 
     position_estimate[1] = drone.get_log('stateEstimate.y')
 
-    # on estime le centre de la box en fonction de là où il detecte un edge
-    center_x = platform.x_start + np.sign(speed_x) * platform.HALF_X
-    center_y = platform.y_start + np.sign(speed_y) * platform.HALF_Y
 
     print(f'pos drone x = {position_estimate[0]:.3f} y = {position_estimate[1]:.3}')
-    print(f'pos boite x = {center_x:.3f} y = {center_y:.3f}')
+    print(f'pos boite x = {x:.3f} y = {y:.3f}')
     print(f'Platform start x = {platform.x_start:.3f} y = {platform.y_start:.3f}')
 
     while(fly):
@@ -146,11 +142,11 @@ def land_on_platform(drone:Drone):
         position_estimate[1] = drone.get_log('stateEstimate.y')
         # print(f'error {error}')
         # essaye de revenir au centre de la boite
-        if error > 0.01 :
+        if error > 0.02 :
             landing_speed = -0.1
             P = 5.5
-            err_x = (position_estimate[0]-center_x)
-            err_y = (position_estimate[1]-center_y)
+            err_x = (position_estimate[0]-x)
+            err_y = (position_estimate[1]-y)
             landing_speed_x = err_x * landing_speed * P
             landing_speed_y = err_y * landing_speed * P
 
@@ -181,17 +177,49 @@ def land_on_platform(drone:Drone):
 
 def procedure1(drone:Drone):
     """ Cherche la première arête, puis se déplace vers la droite pour chercher la seconde arrête"""
-    drone.take_off()
-    platform.x_start, _ = search_edge_infinite(drone, 0.2, 0)
-    drone.move_distance(0.25, 0, 0, 0.3) # avance un peu au centre de la plateforme
-    time.sleep(2)
-    drone.move_distance(0, 0.6, 0, 0.2)
-    time.sleep(2)        
-    _, platform.y_start = search_edge_infinite(drone, 0, -0.2)  
-    land_on_platform(drone)
-    time.sleep(2)
-    drone.take_off(1)
+    drone.take_off(0.2)
+    # x_start, _ = search_edge_infinite(drone, 0.3, 0)
+
+    # cherche le début de la plateforme
+    fly = True
+    time1 = time.time_ns()
+    while(fly):
+        drone.start_linear_motion(0.2, 0, 0)
+        drone.stop_by_hand()
+        edge_detected, _, _ = edge_detection(drone, height=0.2, threshold=0.013)
+        # attends une seconde de stabilisation avant d'accepter les edges
+    
+        if edge_detected and time.time_ns()-time1 > 1*1e9:
+            drone.stop()
+            fly = False
+        time.sleep(0.1)
+    print("out")
     time.sleep(1)
+    # avance un peu au centre de la plateforme
+    drone.move_distance(0.12, 0, 0, 0.1) 
+    time.sleep(2)
+
+    # cherche le bord 2 de la plateforme
+    fly = True
+    while(fly):
+        drone.start_linear_motion(0, -0.1, 0)
+        drone.stop_by_hand()
+        edge_detected, _, y = edge_detection(drone, height=0.2, threshold=0.05)
+        # attends une seconde de stabilisation avant d'accepter les edges
+        if edge_detected:
+            drone.stop()
+            fly = False
+        time.sleep(0.1)
+    time.sleep(1)
+
+    # on estime le centre de la box en fonction de là où il detecte un edge
+    center_x = drone.get_log('stateEstimate.x')
+    center_y = drone.get_log('stateEstimate.y') + platform.HALF_Y
+
+    time.sleep(1)
+
+    go_to_P(drone, center_x, center_y)
+
     drone.land()
 
 def main_land_platform(drone:Drone):
@@ -357,8 +385,33 @@ if __name__ == '__main__':
         # while(True):
         #     print(drone.get_log('stateEstimate.y'))
 
-        main_land_platform(drone)
-        # procedure1(drone)
+
+        # main_land_platform(drone)
+        procedure1(drone)
+        # drone.take_off(0.4)
+        # # coin 1
+        # drone.left(0.15, 0.2)
+        # time.sleep(2)
+        # drone.down(0.25, 0.1)
+        # time.sleep(4)
+        # # milieu
+        # drone.up(0.25, 0.3)
+        # time.sleep(1)
+        # drone.left(0.25, 0.2)
+        # time.sleep(1)
+        # drone.down(0.25, 0.1)
+        # time.sleep(4)
+        # #coin 2
+        # drone.up(0.25, 0.3)
+        # drone.left(0.2, 0.2)
+        # time.sleep(1)
+        # drone.down(0.25, 0.1)
+        # time.sleep(4)
+        # drone.up(0.25, 0.3)
+        
+
+        drone.land()
+        drone.stop_logs()
 
         # drone.go_to(x=1, y=-0.3, z=1.5)
 
