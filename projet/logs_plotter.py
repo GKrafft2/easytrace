@@ -5,7 +5,7 @@ import numpy as np
 from scipy.signal import correlate
 
 # import data in pandas dataframe (change the file name to your local file)
-data = pd.read_csv('logs/2022_05_12_21_28_42.csv', header = None)
+data = pd.read_csv('logs/2022_05_18_14_48_57.csv', header = None)
 # print(data)
 
 # remove all-zeros rows
@@ -41,13 +41,10 @@ time = np.arange(0, output.shape[0])
 
 # plot only one timeserie
 plt.figure()
-data[0].plot()
-data[1].plot()
-data[2].plot()
-
-
+data[0].plot(label="x")
+data[1].plot(label="y")
+data[2].plot(label="z")
 plt.legend()
-
 
 plt.show()
 

@@ -13,131 +13,25 @@ from cflib.utils import uri_helper
 # Libraries personnelles
 from drone import Drone
 from arena import arena, platform
+from p_search_platform import edge_detection
 
 
 
-def search_edge_infinite(drone:Drone, speed_x, speed_y):
-    print("METHOD : search_edge")
 
-    # Alias pour les logs de drone estimate.x estimate.y et estimate.z
-    # Permet de garder les mêmes valeurs durant un passage complet de boucle
-    # Un appel direct aux logs peut être actualisé entre temps
-    position_estimate = [0, 0, 0]
-
-    zrange = np.zeros(5)
-    box_found = False
-    flight_height = drone.get_log('stateEstimate.z')
-
-    # # Assure d'être à 40cm de hauteur pour chercher la platform
-    # LANDING_HEIGHT = 0.4
-    # if drone.height_cmd != LANDING_HEIGHT:
-    #     drone.go_to_up(LANDING_HEIGHT)
-
-    while(not box_found):
-
-        # Met à jour les vitesses de déplacement
-        drone.start_linear_motion(speed_x, speed_y, 0)
-        # time.sleep(1)
-        position_estimate[0] = drone.get_log('stateEstimate.x') 
-        position_estimate[1] = drone.get_log('stateEstimate.y')
-        position_estimate[2] = drone.get_log('stateEstimate.z')
-
-        # Tableau "circulaire" des 5 derniers logs de estimate.z qui sont plus élevé que default_height
-        if position_estimate[2] > flight_height-0.02:
-            zrange = np.append(zrange, position_estimate[2])
-            zrange = zrange[1:]
-            print(zrange)
-
-        # Détecte un changement de hauteur selon le threshold = détection de la plateforme
-        THRESH = 0.012
-        moy = np.mean(zrange[:-1])
-        if moy > flight_height-0.05 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
-            #le mode landing est activé
-            print("edge found")
-            box_found = True
-            drone.stop()
-        
-        # Délai très important ! (faut le temps que les commandes soient envoyées au drone)
-        time.sleep(0.1)
-
-    # retourne la position position détectée
-    return position_estimate[0], position_estimate[1]
-
-def search_edge_timed(drone:Drone, speed_x, speed_y, distance):
-    """ Avance une certaine distance tout en détectant un potentiel edge """
-    print("METHOD : move_and_search_edge")
-
-    # Alias pour les logs de drone estimate.x estimate.y et estimate.z
-    # Permet de garder les mêmes valeurs durant un passage complet de boucle
-    # Un appel direct aux logs peut être actualisé entre temps
-    position_estimate = [0, 0, 0]
-
-    zrange = np.zeros(5)
-    edge_detected = False
-    edge_x_position = 0
-    edge_y_position = 0
-    drone.speed_x_cmd = speed_x
-    drone.speed_y_cmd = speed_y
-    flight_height = drone.get_log('stateEstimate.z')
-
-    # calcule le temps de vole
-    speed = np.sqrt(speed_x**2 + speed_y**2)
-    fly_time = distance/speed
-    
-    # Met à jour les vitesses de déplacement
-    drone.start_linear_motion(speed_x, speed_y, 0)
-    start_time = time.time_ns()
-    # vole pour un temps donné
-    while(int(fly_time*1e9) > time.time_ns()-start_time):
-
-        # time.sleep(1)
-        position_estimate[0] = drone.get_log('stateEstimate.x') 
-        position_estimate[1] = drone.get_log('stateEstimate.y')
-        position_estimate[2] = drone.get_log('stateEstimate.z')
-
-        # N'enregister les valeurs que quand on vole à la hauteur défini au début de la fonction
-        if position_estimate[2] > flight_height-0.02 :
-            zrange = np.append(zrange, position_estimate[2])
-            zrange = zrange[1:]
-
-        # Détecte un changement de hauteur selon le threshold = détection de la plateforme
-        THRESH = 0.015
-
-        moy = np.mean(zrange[:-1])
-        if moy > flight_height-0.05 and (zrange[-1] < moy - THRESH or zrange[-1] > moy + THRESH) and not edge_detected: #detecte si on est passé au dessus de qqch (plateforme)
-            #le mode landing est activé
-            print("edge found")
-            edge_detected = True
-            edge_x_position = position_estimate[0]
-            edge_y_position = position_estimate[1]
-        
-        # Délai très important ! (faut le temps que les commandes soient envoyées au drone)
-        time.sleep(0.1)
-
-    # retourne la position position détectée
-    return edge_detected, edge_x_position, edge_y_position
-
-def land_on_platform(drone:Drone):
+def go_to_P(drone:Drone, x, y):
     print("METHOD : land_on_platform")
 
-    max_vel = 0.2
     error = 1
-
     fly = True
-    speed_x = 0.2
-    speed_y = -0.2
-        
+
     #screenshot de la pos au moment ou il detecte la boite
     position_estimate = [0,0]
     position_estimate[0] = drone.get_log('stateEstimate.x') 
     position_estimate[1] = drone.get_log('stateEstimate.y')
 
-    # on estime le centre de la box en fonction de là où il detecte un edge
-    center_x = platform.x_start + np.sign(speed_x) * platform.HALF_X
-    center_y = platform.y_start + np.sign(speed_y) * platform.HALF_Y
 
     print(f'pos drone x = {position_estimate[0]:.3f} y = {position_estimate[1]:.3}')
-    print(f'pos boite x = {center_x:.3f} y = {center_y:.3f}')
+    print(f'pos boite x = {x:.3f} y = {y:.3f}')
     print(f'Platform start x = {platform.x_start:.3f} y = {platform.y_start:.3f}')
 
     while(fly):
@@ -146,11 +40,11 @@ def land_on_platform(drone:Drone):
         position_estimate[1] = drone.get_log('stateEstimate.y')
         # print(f'error {error}')
         # essaye de revenir au centre de la boite
-        if error > 0.01 :
+        if error > 0.02 :
             landing_speed = -0.1
             P = 5.5
-            err_x = (position_estimate[0]-center_x)
-            err_y = (position_estimate[1]-center_y)
+            err_x = (position_estimate[0]-x)
+            err_y = (position_estimate[1]-y)
             landing_speed_x = err_x * landing_speed * P
             landing_speed_y = err_y * landing_speed * P
 
@@ -181,17 +75,54 @@ def land_on_platform(drone:Drone):
 
 def procedure1(drone:Drone):
     """ Cherche la première arête, puis se déplace vers la droite pour chercher la seconde arrête"""
-    drone.take_off()
-    platform.x_start, _ = search_edge_infinite(drone, 0.2, 0)
-    drone.move_distance(0.25, 0, 0, 0.3) # avance un peu au centre de la plateforme
-    time.sleep(2)
-    drone.move_distance(0, 0.6, 0, 0.2)
-    time.sleep(2)        
-    _, platform.y_start = search_edge_infinite(drone, 0, -0.2)  
-    land_on_platform(drone)
-    time.sleep(2)
-    drone.take_off(1)
+    drone.take_off(0.2)
+    # x_start, _ = search_edge_infinite(drone, 0.3, 0)
+
+    # cherche le début de la plateforme
+    fly = True
+    time1 = time.time_ns()
+    while(fly):
+        drone.start_linear_motion(0.2, 0, 0)
+        drone.stop_by_hand()
+        edge_detected, _, _ = edge_detection(drone, height=0.2, threshold=0.013)
+        # attends une seconde de stabilisation avant d'accepter les edges
+    
+        if edge_detected and time.time_ns()-time1 > 1*1e9:
+            drone.stop()
+            fly = False
+        time.sleep(0.1)
+    print("out")
     time.sleep(1)
+    # avance un peu au centre de la plateforme
+    drone.move_distance(0.12, 0, 0, 0.1) 
+    time.sleep(2)
+
+    # cherche le bord 2 de la plateforme
+    fly = True
+    position_history = drone.get_log('stateEstimate.y')
+    while(fly):
+        if drone.get_log('stateEstimate.y') < position_history - 0.35:
+            drone.start_linear_motion(0, 0.1, 0)
+            position_history = -100
+        else:
+            drone.start_linear_motion(0, -0.1, 0)
+        drone.stop_by_hand()
+        edge_detected, _, y = edge_detection(drone, height=0.2, threshold=0.05)
+        # attends une seconde de stabilisation avant d'accepter les edges
+        if edge_detected:
+            drone.stop()
+            fly = False
+        time.sleep(0.1)
+    time.sleep(1)
+
+    # on estime le centre de la box en fonction de là où il detecte un edge
+    center_x = drone.get_log('stateEstimate.x')
+    center_y = drone.get_log('stateEstimate.y') + platform.HALF_Y
+
+    time.sleep(1)
+
+    go_to_P(drone, center_x, center_y)
+
     drone.land()
 
 def main_land_platform(drone:Drone):
@@ -227,47 +158,6 @@ def main_land_platform(drone:Drone):
             end = True
         else:
             direction_moved = 0
-
-
-
-def landing_level_1(y_difference):
-    # ===== LEVEL 1 =======
-    # Calcule la pente (tendance) de déviation de la position y depuis que la plateforme est détectée
-    history = 200
-    y_estimate = drone.get_log('stateEstimate.y', history, array=True)
-    t_array = np.linspace(0, history, history)
-    a, _ = np.polyfit(t_array, y_estimate, 1)
-    print(f'a = {a:.4e}')
-
-    # variable de direction prise (0 tout droit, 1 droit, -1 gauche)
-    direction_moved = 0
-    
-    # A partir de la tendance, si elle est trop élevée, corrige la position
-    # double vérif : tendance de déviation en z et déviation aboslue entre le 1er et 2ème edge
-    # trop à gauche
-    distance = 0.15
-    speed = 0.2
-    if a > 2e-4:
-        print("going right with a")
-        drone.right(distance, speed)
-        direction_moved = 1
-    elif y_difference > 0.025:
-        print("going left with b")
-        print(y_difference)
-        drone.left(distance, speed)
-        direction_moved = 1
-    # trop à droite
-    elif a < -2e-4:
-        print("going left with a")
-        drone.left(distance, speed)
-        direction_moved = -1
-    elif y_difference < -0.025:
-        print("going right with b")
-        print(y_difference)
-        drone.right(distance, speed)
-        direction_moved = -1
-    
-    return direction_moved
 
     
 def landing_level_2(direction_moved):
@@ -357,8 +247,33 @@ if __name__ == '__main__':
         # while(True):
         #     print(drone.get_log('stateEstimate.y'))
 
-        main_land_platform(drone)
-        # procedure1(drone)
+
+        # main_land_platform(drone)
+        procedure1(drone)
+        # drone.take_off(0.4)
+        # # coin 1
+        # drone.left(0.15, 0.2)
+        # time.sleep(2)
+        # drone.down(0.25, 0.1)
+        # time.sleep(4)
+        # # milieu
+        # drone.up(0.25, 0.3)
+        # time.sleep(1)
+        # drone.left(0.25, 0.2)
+        # time.sleep(1)
+        # drone.down(0.25, 0.1)
+        # time.sleep(4)
+        # #coin 2
+        # drone.up(0.25, 0.3)
+        # drone.left(0.2, 0.2)
+        # time.sleep(1)
+        # drone.down(0.25, 0.1)
+        # time.sleep(4)
+        # drone.up(0.25, 0.3)
+        
+
+        drone.land()
+        drone.stop_logs()
 
         # drone.go_to(x=1, y=-0.3, z=1.5)
 
