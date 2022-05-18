@@ -33,9 +33,9 @@ def avoid(drone:Drone, line_position, direction:Direction):
     # AVOID_DIST_LAT = 150  #mm # mise à jour plus loin
     AVOID_DIST_FRONT = 400  # mm
     AVOID_SPEED_LAT = 0.5 
-    AVOID_SPEED_COME_BACK = 0.25
-    AVOID_TIME_COME_BACK = 1 # secondes
-    AVOID_SPEED_FRONT = 0.3
+    AVOID_SPEED_COME_BACK = 0.2
+    AVOID_TIME_COME_BACK = 2 # secondes
+    AVOID_SPEED_FRONT = 0.7
     FORWARD_SPEED = 0.2
 
 

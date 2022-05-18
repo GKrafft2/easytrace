@@ -37,7 +37,7 @@ def edge_detection(drone:Drone):
     # Détecte un changement de hauteur selon le threshold = détection de la plateforme
     THRESH = 0.03
     moy = np.mean(drone.zrange[:-1])
-    print(moy-drone.zrange[-1])
+    # print(moy-drone.zrange[-1])
     if moy > drone.height_cmd-0.05 and (drone.zrange[-1] < moy - THRESH or drone.zrange[-1] > moy + THRESH): #detecte si on est passé au dessus de qqch (plateforme)
         #le mode landing est activé
         print("edge found") #passe la main au landing
@@ -106,16 +106,20 @@ def main_search_platform(drone:Drone):
         if edge_detected:
             fly = 0
 
-def move(drone:Drone, distance, line_position, start_position = [0, 0], direction_x=0, direction_y=0, speed_x=0.2, speed_y=0.2):
+def move(drone:Drone, distance, line_position, start_position=[0, 0], direction_x=0, direction_y=0, speed_x=0.2, speed_y=0.2):
     # direction_x: avant=1, arrière=-1
     # direction_y: droite=-1, gauche=1
     position_estimate = [0, 0]
     position_estimate[0] = drone.get_log('stateEstimate.x')
     position_estimate[1] = drone.get_log('stateEstimate.y')
 
-    if (not start_position[0] and not start_position[0]):
+    print(start_position,'start position')
+    print(direction_x,direction_y)
+
+    if (not start_position[0] and not start_position[1]):
         start_position[0] = drone.get_log('stateEstimate.x')
         start_position[1] = drone.get_log('stateEstimate.y')
+        print(start_position)
 
     reach = 0
     edge_detected = 0
@@ -131,7 +135,7 @@ def move(drone:Drone, distance, line_position, start_position = [0, 0], directio
         position_estimate[1] = drone.get_log('stateEstimate.y')
         # print(f'x = {position_estimate[0]:.2f}  y = {position_estimate[1]:.2f} {(start_position[1] + distance):.2f}')
 
-        drone.update_slam()
+        # drone.update_slam()
         if not direction_y and direction_x == 1:
             if abs(start_position[0] + distance)<position_estimate[0]:
                 reach = 1
@@ -154,6 +158,7 @@ def move(drone:Drone, distance, line_position, start_position = [0, 0], directio
             if abs(start_position[1] + direction_y*distance)>position_estimate[1]:
                 reach = 1
                 drone.stop()
+            print(f'x = {position_estimate[0]:.2f}  y = {position_estimate[1]:.2f} {(start_position[1] + distance):.2f}')
             speed_x, speed_y = avoid(drone, line_position, Direction.RIGHT)
             drone.start_linear_motion(speed_x, speed_y, 0)
         
@@ -182,6 +187,6 @@ if __name__ == '__main__':
         print("land")
         drone.land()
 
-        drone.slam.slam_hold()
+        # drone.slam.slam_hold()
 
         drone.stop_logs(save=False)
