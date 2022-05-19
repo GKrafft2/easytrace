@@ -19,6 +19,7 @@ class states():
     obstacle_wait = False      # pour essayer de revenir après un obstacle
     default_direction = -1     # direction droite (-1) ou gauche (1) pour l'évitement frontale
     time1 = 0
+    time2 = 0
 
 def crossing_middle_zone(drone:Drone, central_line):
 
@@ -151,12 +152,15 @@ def obstacle_detection(drone:Drone, line_coord, direction:Direction):
             drone.on_track = False
         else:
             speed_east = 0
+            # if not drone.on_track:
+            #     time.sleep(1)
             drone.on_track = True
 
     # ===== Délai avant la déclaration de fin d'obstacle pour revenir sur la ligne de direction
     if states.obstacle_frontal or states.obstacle_lateral:
         states.time1 = time.time_ns()
         states.obstacle_wait = True
+        # drone.on_track = False
     if time.time_ns() - states.time1 > AVOID_TIME_COME_BACK*1e9:
         states.obstacle_wait = False
         

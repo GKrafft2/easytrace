@@ -48,6 +48,7 @@ if __name__ == '__main__':
         # State machine
         state = States.SEARCHING_PLATFORM
         drone.take_off()
+        drone.move_distance(0, 0.1, 0, 0.2)
         while(state is not States.END):
 
             # fonction constemment évaluées
@@ -72,8 +73,6 @@ if __name__ == '__main__':
                 crossed_middle_zone = crossing_middle_zone(drone, central_line)
                 if crossed_middle_zone:
                     state = States.SEARCHING_PLATFORM
-                    drone.next_segment = True
-                    drone.segment = 0
 
             if state == States.SEARCHING_PLATFORM:
 

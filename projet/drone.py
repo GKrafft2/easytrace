@@ -62,7 +62,7 @@ class Drone(MotionCommander):
         self.zrange = np.zeros(5)
     
         # si actuellement sur la ligne de suivi
-        self.on_track = False           
+        self.on_track = True           
 
 
         # Variables et types cor

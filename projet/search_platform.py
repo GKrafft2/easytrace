@@ -88,7 +88,7 @@ def search_platform(drone:Drone, height):
     distance_detected = distance_detection(drone, states.distance, states.start_position, states.direction)
     speed_x, speed_y = obstacle_detection(drone, states.line_coord, states.direction)
     if drone.on_track:
-        edge_detected = edge_detection(drone, fly_height=height, threshold=0.013)
+        edge_detected = edge_detection(drone, fly_height=height, threshold=0.016)
         pass
     
     # le drone bouge tant que la distance souhaitée n'est pas atteinte
