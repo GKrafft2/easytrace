@@ -15,24 +15,26 @@ from crossing_middle_zone import obstacle_detection
 
 def search_platform(drone:Drone, height):
 
-    # distances à parcourir selon l'axe x et l'axe y
+    # distances à parcourir selon l'axe x et l'axe y, comme définit par l'arène
     DISTANCE_Y = Arena.WIDTH
     DISTANCE_X = Platform.SIZE
 
     edge_detected = False
     
+    # =======================================
     # Pattern de recherche en forme de zigzag
+    # =======================================
     
     # les paramètres du pattern sont actualisé à chaque nouveau segment
     if drone.next_segment:
-        # premier déplacement pour rejoindre le bord de l'arène, n'est effectué qu'une fois
+        # Premier déplacement pour rejoindre le bord de l'arène, n'est effectué qu'une fois
         if drone.segment == 0:
-            drone.direction = Direction.LEFT
-            position_estimate = update_position(drone)
-            distance = Arena.LIM_WEST - position_estimate[1]
-            start_position = position_estimate[1]
-            line_coord = position_estimate[0]
-        # Premier segment, avance de 10cm en x
+            drone.direction = Direction.LEFT                    # direction principale de déplacement
+            position_estimate = update_position(drone)          # Position estimée du drone au début du segment
+            distance = Arena.LIM_WEST - position_estimate[1]    # Distance rectiligne à parcourir
+            start_position = position_estimate[1]               # Coordonnée de départ du segment, selon la direction définie
+            line_coord = position_estimate[0]                   # Coordonnée ("vecteur") de la ligne à suivre
+        # Premier segment, avance en x
         if drone.segment == 1:
             drone.direction = Direction.FORWARD
             position_estimate = update_position(drone)
@@ -45,7 +47,7 @@ def search_platform(drone:Drone, height):
             start_position = position_estimate[1]
             distance = DISTANCE_Y
             line_coord = position_estimate[0]
-        # Troisième segment, avance de 10cm en x
+        # Troisième segment, avance en x
         elif drone.segment == 3:
             drone.direction = Direction.FORWARD
             position_estimate = update_position(drone)
@@ -60,7 +62,7 @@ def search_platform(drone:Drone, height):
             line_coord = position_estimate[0]
         
         drone.next_segment = False
-        # permet une rotation de 1 à 4
+        # permet une rotation des segments de 1 à 4
         drone.segment = (drone.segment+1)%4+1
 
     # quitte si en dehors de l'arène
@@ -72,11 +74,12 @@ def search_platform(drone:Drone, height):
     distance_detected = distance_detection(drone, distance, start_position, drone.direction)
     speed_x, speed_y = obstacle_detection(drone, line_coord, drone.direction)
     if drone.on_track:
-        edge_detected = edge_detection(drone, height=height, threshold=0.013)
+        edge_detected = edge_detection(drone, fly_height=height, threshold=0.013)
     
     # le drone bouge tant que la distance souhaitée n'est pas atteinte
     if distance_detected:
         drone.stop()
+        # permet l'update des paramètres de déplacement selon le prochain segment
         drone.next_segment = True
     else:
         drone.start_linear_motion(speed_x, speed_y, 0)
@@ -98,6 +101,7 @@ def distance_detection(drone:Drone, distance, start_position, direction):
     distance_detected = False
 
     if direction == Direction.FORWARD:
+        # détecte si la distance parcourue est supérieur à la distance souhaitée selon la coordonnée de départ
         if start_position + distance < drone.get_log('stateEstimate.x'):
             distance_detected = True
 
@@ -116,22 +120,22 @@ def distance_detection(drone:Drone, distance, start_position, direction):
     return distance_detected
 
 
-def edge_detection(drone:Drone, height, threshold):
+def edge_detection(drone:Drone, fly_height, threshold):
     """ Fonction continue pour détecter un edge, càd un changement de hauteur brusque """
 
     edge_detected = False
-
-    height_estimate = drone.get_log('stateEstimate.z')
+    # hauteur de vol actuelle
+    height = drone.get_log('stateEstimate.z')
 
     # Tableau "circulaire" des 5 derniers logs de estimate.z qui sont plus élevé que default_height
-    if height_estimate > height-0.02:
-        drone.zrange = np.append(drone.zrange, height_estimate)
+    if height > fly_height-0.02:
+        drone.zrange = np.append(drone.zrange, height)
         drone.zrange = drone.zrange[1:]
         # print(drone.zrange)
 
     # Détecte un changement de hauteur selon le threshold = détection de la plateforme
     moy = np.mean(drone.zrange[:-1])
-    if moy > height-0.05 and (drone.zrange[-1] < moy - threshold or drone.zrange[-1] > moy + threshold): #detecte si on est passé au dessus de qqch (plateforme)
+    if moy > fly_height-0.05 and (drone.zrange[-1] < moy - threshold or drone.zrange[-1] > moy + threshold): #detecte si on est passé au dessus de qqch (plateforme)
         print("edge found")
         edge_detected = True
         drone.stop()

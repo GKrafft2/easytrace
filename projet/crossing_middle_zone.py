@@ -14,6 +14,7 @@ from arena import Arena, Direction
 
 def crossing_middle_zone(drone:Drone, central_line):
 
+        # Vérifie l'arrivée dans la zone de la seconde plateforme et la présence d'obstacles
         arrival = zone_P2_detection(drone)
         speed_x, speed_y = obstacle_detection(drone, central_line, Direction.FORWARD)
             
@@ -28,30 +29,37 @@ def obstacle_detection(drone:Drone, line_coord, direction:Direction):
     """ detect obstacle and return a pair of speed (x,y) to avoid
         Param: line_position the y line to follow from drone origin """
 
-    # AVOID_DIST_LAT = 150  #mm # mise à jour plus loin
     AVOID_DIST_FRONT = 400  # mm
     AVOID_SPEED_LAT = 0.5 
     AVOID_SPEED_COME_BACK = 0.2
     AVOID_TIME_COME_BACK = 2 # secondes
     AVOID_SPEED_FRONT = 0.7
     FORWARD_SPEED = 0.2
+    # ======= adaptation de la distance latérale ==============
+    # si le drone est sur la bonne trajectoire, il sera moins sensible que s'il revient en position
+    if drone.on_track:
+        AVOID_DIST_LAT = 50
+    else:
+        AVOID_DIST_LAT = 160
+
+    # Threshold pour le maintien de la ligne de suivi sans oscillations
+    POSITION_DIRECTION_THRESH = 0.05
 
     # cree un array pour mettre les 5 variables de sensor
     # range [front,back,left,right,up]
     range_sensors = np.empty(5)
     position_estimate = [0, 0]
 
-    # Threshold pour le maintien de la ligne de suivi sans oscillations
-    POSITION_DIRECTION_THRESH = 0.05
-
+    # variables pour définir la vitesse latérale du drone
     correction = 0
     speed_east = 0
     speed_east_lat = 0
     speed_east_front = 0
 
+    # direction d'évitement, en fonction du côté du drone par rapport à la ligne de suivi
     avoid_dir = drone.default_direction 
 
-    # ajuste les capteurs en fonction de la direction de déplacement
+    # ajuste les capteurs et variables en fonction de la direction de déplacement du drone
     if direction == Direction.FORWARD: # référence
         range_sensors[0] = drone.get_log('range.front')
         range_sensors[1] = drone.get_log('range.back')
@@ -89,14 +97,6 @@ def obstacle_detection(drone:Drone, line_coord, direction:Direction):
         RIGHT = 1
         LEFT = -1
     range_sensors[4] = drone.get_log('range.up')
-
-    # ======= adaptation de la distance latérale ==============
-    # si le drone est sur la bonne trajectoire, il sera moins sensible que s'il revient en position
-    if drone.on_track:
-        AVOID_DIST_LAT = 50
-    else:
-        AVOID_DIST_LAT = 160
-
 
     # ====== évitement latéral =======
     if range_sensors[2] < AVOID_DIST_LAT:  # obstacle détecté à gauche

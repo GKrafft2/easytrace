@@ -73,7 +73,7 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         while(fly):
             drone.start_linear_motion(speed1_x, speed1_y, 0)
             drone.stop_by_hand()
-            edge_detected = edge_detection(drone, height=height, threshold=0.013)
+            edge_detected = edge_detection(drone, fly_height=height, threshold=0.013)
             # attends une seconde de stabilisation avant d'accepter les edges
         
             if edge_detected and time.time_ns()-time1 > 1*1e9:
@@ -117,7 +117,7 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
             print('bien')
             print(current_position)
         
-        edge_detected = edge_detection(drone, height=height, threshold=0.03)
+        edge_detected = edge_detection(drone, fly_height=height, threshold=0.03)
         
         if edge_detected:
             drone.stop()
