@@ -1,12 +1,5 @@
-from enum import Enum
-import logging
-import sys
-import os
-
 # Libraries python
 import time
-import datetime as dt
-from threading import Event
 import numpy as np
 
 # Libraries crazyflie
@@ -19,9 +12,20 @@ from cflib.utils import uri_helper
 from drone import Drone
 from arena import Arena, Direction
 
+def crossing_middle_zone(drone:Drone, central_line):
 
-def avoid(drone:Drone, line_position, direction:Direction):
-    """ avoid obstacle live
+        arrival = zone_P2_detection(drone)
+        speed_x, speed_y = obstacle_detection(drone, central_line, Direction.FORWARD)
+            
+        if not arrival: 
+            drone.start_linear_motion(speed_x, speed_y, 0)
+        else:
+            drone.stop()
+
+        return arrival
+
+def obstacle_detection(drone:Drone, line_coord, direction:Direction):
+    """ detect obstacle and return a pair of speed (x,y) to avoid
         Param: line_position the y line to follow from drone origin """
 
     # AVOID_DIST_LAT = 150  #mm # mise à jour plus loin
@@ -32,13 +36,12 @@ def avoid(drone:Drone, line_position, direction:Direction):
     AVOID_SPEED_FRONT = 0.7
     FORWARD_SPEED = 0.2
 
-
     # cree un array pour mettre les 5 variables de sensor
     # range [front,back,left,right,up]
     range_sensors = np.empty(5)
-
     position_estimate = [0, 0]
 
+    # Threshold pour le maintien de la ligne de suivi sans oscillations
     POSITION_DIRECTION_THRESH = 0.05
 
     correction = 0
@@ -46,10 +49,7 @@ def avoid(drone:Drone, line_position, direction:Direction):
     speed_east_lat = 0
     speed_east_front = 0
 
-    RIGHT = -1
-    LEFT = 1
-
-    avoid_dir = drone.default_direction #drone va commencer par éviter les obstacles par la droite
+    avoid_dir = drone.default_direction 
 
     # ajuste les capteurs en fonction de la direction de déplacement
     if direction == Direction.FORWARD: # référence
@@ -113,10 +113,10 @@ def avoid(drone:Drone, line_position, direction:Direction):
     # ====== évitement frontal ========
     if range_sensors[0] < AVOID_DIST_FRONT:
         drone.obstacle_frontal = True
-        if position_estimate[1] > line_position + 1:  # trop a gauche doit éviter par la droite
+        if position_estimate[1] > line_coord + 1:  # trop a gauche doit éviter par la droite
             avoid_dir = RIGHT
             drone.default_direction = RIGHT
-        elif position_estimate[1] < line_position - 1:  # trop a droite doit éviter par la gauche
+        elif position_estimate[1] < line_coord - 1:  # trop a droite doit éviter par la gauche
             avoid_dir = LEFT
             drone.default_direction = LEFT
 
@@ -135,10 +135,10 @@ def avoid(drone:Drone, line_position, direction:Direction):
     # ====== revient à la ligne directrice si pas d'obstacle ===============
     if drone.obstacle_wait == False:
         correction = 0
-        if position_estimate[1] > line_position + POSITION_DIRECTION_THRESH:
+        if position_estimate[1] > line_coord + POSITION_DIRECTION_THRESH:
             speed_east =  RIGHT * AVOID_SPEED_COME_BACK
             drone.on_track = False
-        elif position_estimate[1] < line_position - POSITION_DIRECTION_THRESH:
+        elif position_estimate[1] < line_coord - POSITION_DIRECTION_THRESH:
             speed_east =  LEFT * AVOID_SPEED_COME_BACK
             drone.on_track = False
         else:
@@ -154,6 +154,7 @@ def avoid(drone:Drone, line_position, direction:Direction):
         
     speed_north = FORWARD_SPEED-correction
 
+    # ajuste les vitesses du drone en x et y en fonction des vitesses calculés de l'orientation
     if direction == Direction.FORWARD:
         speed_x, speed_y = speed_north, speed_east
     elif direction == Direction.LEFT:
@@ -165,7 +166,8 @@ def avoid(drone:Drone, line_position, direction:Direction):
     
     return speed_x, speed_y
 
-def start_zone_2_check(drone:Drone):
+
+def zone_P2_detection(drone:Drone):
     """ vérifie quand le drone arrive dans la zone de la plateforme d'arrivée """
 
     arrival = False
@@ -174,33 +176,6 @@ def start_zone_2_check(drone:Drone):
         arrival = True
 
     return arrival
-
-
-def main_crossing(drone:Drone):
-    fly = True
-
-    #le drone suit la ligne au centre de l'arène
-    central_line = - (Arena.ORIGIN_Y - Arena.WIDTH/2)
-    # update de la direction par défault s'il y a un obstacle
-    if central_line > 0:
-        drone.default_direction = 1
-    else:
-        drone.default_direction = -1
-
-    while(fly):
-
-        drone.update_slam()
-        drone.stop_by_hand()
-        arrival = start_zone_2_check(drone)
-        if not arrival:
-            speed_x, speed_y = avoid(drone, central_line, Direction.FORWARD)
-            drone.start_linear_motion(speed_x, speed_y, 0)
-        else:
-            drone.stop()
-            fly = False
-        time.sleep(0.1)
-    # drone.slam.slam_hold()
-
 
 
 if __name__ == '__main__':
@@ -213,13 +188,26 @@ if __name__ == '__main__':
         # crée un drone (hérite de motion commander)
         drone = Drone(scf, default_height=0.2)
 
+        #le drone suit la ligne au centre de l'arène
+        central_line = - (Arena.ORIGIN_Y - Arena.WIDTH/2)
+        # update de la direction par défault s'il y a un obstacle
+        if central_line > 0:
+            drone.default_direction = 1
+        else:
+            drone.default_direction = -1
+
         drone.start_logs()
 
         drone.take_off()
 
-        main_crossing(drone)
+        crossed_middle_zone = False
+        while(not crossed_middle_zone):
+            drone.update_slam()
+            drone.stop_by_hand()
+            crossed_middle_zone = crossing_middle_zone(drone, central_line)
+            time.sleep(0.1)
 
         drone.land()
-        drone.slam.slam_hold()
+        drone.slam.hold()
 
         drone.stop_logs(save=False)

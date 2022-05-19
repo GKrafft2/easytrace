@@ -4,8 +4,6 @@ class Platform():
     SIZE = 0.3 # même largeur et profondeur
     HEIGHT = 0.1
     HALF_BOX = 0.25
-    # x_start = 0 # emplacement x trouvé de la boite 2
-    # y_start = 0 # emplacement y trouvé de la boite 2
 
 class Arena():
     """ Dimension en [m] l'arène """

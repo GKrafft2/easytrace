@@ -6,7 +6,6 @@ import os
 import time
 import datetime as dt
 from threading import Event
-from typing import Tuple
 
 from cflib.crazyflie.log import LogConfig
 from cflib.positioning.motion_commander import MotionCommander
@@ -71,6 +70,10 @@ class Drone(MotionCommander):
         self.obstacle_wait = False      # pour essayer de revenir après un obstacle
         self.on_track = False           # si actuellement sur la ligne de suivi
         self.default_direction = -1     # direction droite (-1) ou gauche (1) pour l'évitement frontale
+
+        # variable de pattern (pour zigzag)
+        self.next_segment = True
+        self.segment = 0
 
         # Variables et types correspondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
@@ -203,7 +206,7 @@ class Drone(MotionCommander):
 
     def update_slam(self):
         self.refresh_logs()
-        self.slam.slam_update(self.range_sensors, self.position_estimate)
+        self.slam.update(self.range_sensors, self.position_estimate)
 
     def get_time(self):
         return self.__time
@@ -315,24 +318,3 @@ class Drone(MotionCommander):
         time.sleep(1)
         # execute Motion Commander method
         super(Drone, self).land(velocity)
-
-
-    def spiral_search(self):
-        spiral_y = [1.5, -1.5, 1.2, -1.2, 0.9]
-        spiral_x = [1.5, 0.6, 1.2, 0.9, 0.9]
-        for i, y in enumerate(spiral_y):
-        #     if y > 0:
-        #         print(f'y = {y}')
-        #         self.go_to_right(y)
-        #     else:
-        #         self.go_to_left(y)
-        #
-        #         print(f'x = {spiral_x[i]}')
-        #     if i != 0 and spiral_x[i-1] > spiral_x[i]:
-        #         self.go_to_back(spiral_x[i])
-        #     elif i != 0 and spiral_x[i - 1] < spiral_x[i]:
-        #         self.go_to_forward(spiral_x[i])
-            self.move_distance(0,y,0)
-            self.move_distance(spiral_x[i],0,0)
-
-

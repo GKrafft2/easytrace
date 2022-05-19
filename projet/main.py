@@ -1,8 +1,6 @@
 # Libraries python
 import time
-import datetime as dt
-from threading import Event
-import numpy as np
+from datetime import timedelta
 from enum import Enum
 
 # Libraries crazyflie
@@ -15,20 +13,20 @@ from cflib.utils import uri_helper
 from drone import Drone
 
 # parties du projet
-from p_crossing import main_crossing
-from p_search_platform import main_search_platform
-from p_back_home import main_back_home
-from arena import Arena, Direction
-import p_crossing as crossing
-from p_land_platform import landing_procedure
+from crossing_middle_zone import crossing_middle_zone
+from search_platform import search_platform
+from back_home import main_back_home
+from landing_procedure import landing_procedure
+from arena import Arena
 
 class States(Enum):
     START = -1
-    CROSSING = 0
+    CROSSING_MIDDLE_ZONE = 0
     SEARCHING_PLATFORM = 1
-    LANDING = 2
+    LANDING_P2 = 2
     GOING_HOME = 3
-    END = 4
+    LANDING_P1 = 4
+    END = 5
 
 
 if __name__ == '__main__':
@@ -44,6 +42,9 @@ if __name__ == '__main__':
         drone = Drone(scf, default_height=0.4)
         drone.start_logs()
 
+        # chronomètre le temps de vol
+        start_time = time.perf_counter()
+
         # State machine
         state = States.START
         while(state is not States.END):
@@ -53,43 +54,60 @@ if __name__ == '__main__':
             drone.stop_by_hand()
 
             if state == States.START:
-                drone.take_off()
 
+                drone.take_off()
                 #le drone suit la ligne au centre de l'arène
                 central_line = - (Arena.ORIGIN_Y - Arena.WIDTH/2)
                 # update de la direction par défault s'il y a un obstacle
                 if central_line > 0:
-                    drone.default_direction = 1
+                    drone.default_direction = 1   # gauche
                 else:
-                    drone.default_direction = -1
+                    drone.default_direction = -1  # droite
+                state = States.CROSSING_MIDDLE_ZONE
 
-                state = States.CROSSING
+            if state == States.CROSSING_MIDDLE_ZONE:
 
-            if state == States.CROSSING:
-                arrival = crossing.start_zone_2_check(drone)
-                if not arrival:
-                    speed_x, speed_y = crossing.avoid(drone, central_line, Direction.FORWARD)
-                    drone.start_linear_motion(speed_x, speed_y, 0)
-                else:
+                # fonction continue
+                crossed_middle_zone = crossing_middle_zone(drone, central_line)
+                if crossed_middle_zone:
                     state = States.SEARCHING_PLATFORM
+                    drone.next_segment = True
+                    drone.segment = 0
 
             if state == States.SEARCHING_PLATFORM:
-                # fonction bloquante
-                main_search_platform(drone)
 
-                state = States.LANDING
+                # fonction continue
+                edge_detected = search_platform(drone, height=0.2)
+                if edge_detected:
+                    state = States.LANDING_P2
 
-            if state == States.LANDING:
+            if state == States.LANDING_P2:
+
                 # fonction bloquante
-                landing_procedure(drone, drone.direction)
+                landing_procedure(drone, drone.direction, height=0.2)
+                state = States.GOING_HOME
 
             if state == States.GOING_HOME:
+
+                # fonction continue
                 pass
-                # state = States.LANDINGW
+                # state = States.LANDING_P1
+
+            if state == States.LANDING_P1:
+                
+                # fonction bloquante
+                landing_procedure(drone, drone.direction, height=0.2, search_first_edge=True)
         
+            # Délai important pour ne pas overflood les envois de données au drone
             time.sleep(0.1)
 
         drone.stop_logs()
+
+        # affiche le temps de vol
+        end_time = time.perf_counter()
+        print(f'Total fly time : {timedelta(seconds=round(end_time-start_time, 0))} \n')    
+
+        drone.slam.hold()
 
 
 
