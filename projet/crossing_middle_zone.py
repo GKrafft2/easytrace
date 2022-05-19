@@ -12,6 +12,14 @@ from cflib.utils import uri_helper
 from drone import Drone
 from arena import Arena, Direction
 
+# container pour sauvegarder les états constant d'un passage à l'autre
+class states():
+    obstacle_frontal = False   # si obstacle frontal
+    obstacle_lateral = False   # si obstacle lateral
+    obstacle_wait = False      # pour essayer de revenir après un obstacle
+    default_direction = -1     # direction droite (-1) ou gauche (1) pour l'évitement frontale
+    time1 = 0
+
 def crossing_middle_zone(drone:Drone, central_line):
 
         # Vérifie l'arrivée dans la zone de la seconde plateforme et la présence d'obstacles
@@ -57,7 +65,7 @@ def obstacle_detection(drone:Drone, line_coord, direction:Direction):
     speed_east_front = 0
 
     # direction d'évitement, en fonction du côté du drone par rapport à la ligne de suivi
-    avoid_dir = drone.default_direction 
+    avoid_dir = states.default_direction 
 
     # ajuste les capteurs et variables en fonction de la direction de déplacement du drone
     if direction == Direction.FORWARD: # référence
@@ -100,30 +108,30 @@ def obstacle_detection(drone:Drone, line_coord, direction:Direction):
 
     # ====== évitement latéral =======
     if range_sensors[2] < AVOID_DIST_LAT:  # obstacle détecté à gauche
-        drone.obstacle_lateral = True
+        states.obstacle_lateral = True
         speed_east_lat = -AVOID_SPEED_LAT
     elif range_sensors[3] < AVOID_DIST_LAT:  # obstacle détecté à droite
-        drone.obstacle_lateral = True
+        states.obstacle_lateral = True
         speed_east_lat = AVOID_SPEED_LAT
     else:
-        drone.obstacle_lateral = False
+        states.obstacle_lateral = False
         speed_east_lat = 0
 
 
     # ====== évitement frontal ========
     if range_sensors[0] < AVOID_DIST_FRONT:
-        drone.obstacle_frontal = True
+        states.obstacle_frontal = True
         if position_estimate[1] > line_coord + 1:  # trop a gauche doit éviter par la droite
             avoid_dir = RIGHT
-            drone.default_direction = RIGHT
+            states.default_direction = RIGHT
         elif position_estimate[1] < line_coord - 1:  # trop a droite doit éviter par la gauche
             avoid_dir = LEFT
-            drone.default_direction = LEFT
+            states.default_direction = LEFT
 
         speed_east_front = avoid_dir * AVOID_SPEED_FRONT
     else:
         speed_east_front = 0
-        drone.obstacle_frontal = False
+        states.obstacle_frontal = False
 
 
     # ====== update la vitesse en y ======
@@ -133,7 +141,7 @@ def obstacle_detection(drone:Drone, line_coord, direction:Direction):
         correction = FORWARD_SPEED/2  # correction pour aller plus lentement quand il y a des obstacles
     
     # ====== revient à la ligne directrice si pas d'obstacle ===============
-    if drone.obstacle_wait == False:
+    if states.obstacle_wait == False:
         correction = 0
         if position_estimate[1] > line_coord + POSITION_DIRECTION_THRESH:
             speed_east =  RIGHT * AVOID_SPEED_COME_BACK
@@ -146,11 +154,11 @@ def obstacle_detection(drone:Drone, line_coord, direction:Direction):
             drone.on_track = True
 
     # ===== Délai avant la déclaration de fin d'obstacle pour revenir sur la ligne de direction
-    if drone.obstacle_frontal or drone.obstacle_lateral:
-        drone.time1 = time.time_ns()
-        drone.obstacle_wait = True
-    if time.time_ns() - drone.time1 > AVOID_TIME_COME_BACK*1e9:
-        drone.obstacle_wait = False
+    if states.obstacle_frontal or states.obstacle_lateral:
+        states.time1 = time.time_ns()
+        states.obstacle_wait = True
+    if time.time_ns() - states.time1 > AVOID_TIME_COME_BACK*1e9:
+        states.obstacle_wait = False
         
     speed_north = FORWARD_SPEED-correction
 
@@ -192,9 +200,9 @@ if __name__ == '__main__':
         central_line = - (Arena.ORIGIN_Y - Arena.WIDTH/2)
         # update de la direction par défault s'il y a un obstacle
         if central_line > 0:
-            drone.default_direction = 1
+            states.default_direction = 1
         else:
-            drone.default_direction = -1
+            states.default_direction = -1
 
         drone.start_logs()
 

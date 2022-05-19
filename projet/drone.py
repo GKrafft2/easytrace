@@ -54,30 +54,16 @@ class Drone(MotionCommander):
         self.z_cmd = 0
         self.direction = Direction.FORWARD
 
-        # Temps (container pour sauvegarder le temps)
-        self.time1 = 0
-
         # sensor variables
         self.range_sensors = np.empty(5)
         self.position_estimate = np.empty(2)
 
         # Historique de position (pour le edge detection)
         self.zrange = np.zeros(5)
-        
-        # Etat des obstacles (pour avoid)
-        self.obstacle_frontal = False   # si obstacle frontal
-        self.obstacle_lateral = False   # si obstacle lateral
-        self.obstacle_wait = False      # pour essayer de revenir après un obstacle
-        self.on_track = False           # si actuellement sur la ligne de suivi
-        self.default_direction = -1     # direction droite (-1) ou gauche (1) pour l'évitement frontale
+    
+        # si actuellement sur la ligne de suivi
+        self.on_track = False           
 
-        # variable de pattern (pour zigzag)
-        self.next_segment = True
-        self.segment = 0
-        self.distance = 0
-        self.start_position = 0
-        self.line_coord = 0
-        
 
         # Variables et types cor
         # respondants à logger

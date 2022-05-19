@@ -13,6 +13,16 @@ from drone import Drone
 from arena import Arena, Platform, Direction
 from crossing_middle_zone import obstacle_detection
 
+# container pour sauvegarder les états constant d'un passage à l'autre
+class states():
+    next_segment = True
+    segment = 0
+    direction = Direction.FORWARD
+    distance = 0
+    start_position = 0
+    line_coord = 0
+
+
 def search_platform(drone:Drone, height):
 
     # distances à parcourir selon l'axe x et l'axe y, comme définit par l'arène
@@ -26,58 +36,57 @@ def search_platform(drone:Drone, height):
     # =======================================
     
     # les paramètres du pattern sont actualisé à chaque nouveau segment
-    if drone.next_segment:
+    if states.next_segment:
         position_estimate = update_position(drone)                # Position estimée du drone au début du segment
 
         # Premier déplacement pour rejoindre le bord de l'arène, n'est effectué qu'une fois
-        if drone.segment == 0:
+        if states.segment == 0:
             print("segment 0")
-            drone.direction = Direction.LEFT                          # direction principale de déplacement
-            drone.distance = Arena.LIM_WEST - position_estimate[1]    # Distance rectiligne à parcourir
-            drone.start_position = position_estimate[1]               # Coordonnée de départ du segment, selon la direction définie
-            drone.line_coord = position_estimate[0]                   # Coordonnée ("vecteur") de la ligne à suivre
+            states.direction = Direction.LEFT                          # direction principale de déplacement
+            states.distance = Arena.LIM_WEST - position_estimate[1]    # Distance rectiligne à parcourir
+            states.start_position = position_estimate[1]               # Coordonnée de départ du segment, selon la direction définie
+            states.line_coord = position_estimate[0]                   # Coordonnée ("vecteur") de la ligne à suivre
         # Premier segment, avance en x
-        if drone.segment == 1:
+        if states.segment == 1:
             print("segment 1")
-            drone.direction = Direction.FORWARD
-            drone.distance = DISTANCE_X
-            drone.start_position = drone.line_coord # crade
-            drone.line_coord = position_estimate[1]
+            states.direction = Direction.FORWARD
+            states.distance = DISTANCE_X
+            states.start_position = states.line_coord # crade
+            states.line_coord = position_estimate[1]
         # Deuxième segment, avance de l'autre côté de l'arène en y (vers la droite)
-        elif drone.segment == 2:
+        elif states.segment == 2:
             print("segment 2")
-            drone.direction = Direction.RIGHT
-            drone.start_position = position_estimate[1]
-            drone.distance = DISTANCE_Y
-            drone.line_coord = position_estimate[0]
+            states.direction = Direction.RIGHT
+            states.start_position = position_estimate[1]
+            states.distance = DISTANCE_Y
+            states.line_coord = position_estimate[0]
         # Troisième segment, avance en x
-        elif drone.segment == 3:
+        elif states.segment == 3:
             print("segment 3")
-            drone.direction = Direction.FORWARD
-            drone.distance = DISTANCE_X
-            drone.start_position = drone.line_coord #crade
-            drone.line_coord = position_estimate[1]
+            states.direction = Direction.FORWARD
+            states.distance = DISTANCE_X
+            states.start_position = states.line_coord #crade
+            states.line_coord = position_estimate[1]
         # Quatrième segment, avance de l'autre côté de l'arène en y (vers la gauche)
-        elif drone.segment == 4:
+        elif states.segment == 4:
             print("segment 4")
-            drone.direction = Direction.LEFT
-            drone.start_position = position_estimate[1]
-            drone.distance = DISTANCE_Y
-            drone.line_coord = position_estimate[0]
+            states.direction = Direction.LEFT
+            states.start_position = position_estimate[1]
+            states.distance = DISTANCE_Y
+            states.line_coord = position_estimate[0]
             
-        drone.next_segment = False
+        states.next_segment = False
         # permet une rotation des segments de 1 à 4
-        drone.segment = (drone.segment)%4+1
+        states.segment = (states.segment)%4+1
 
         # quitte si en dehors de l'arène
         if (position_estimate[0]) > Arena.REGION_LENGTH:
             print("En dehors des limites")
             return True
 
-    print(f"{drone.get_log('stateEstimate.x'):.3f}")
     # Vérifie la distance, la présence d'obstacles et la présence de la plateforme
-    distance_detected = distance_detection(drone, drone.distance, drone.start_position, drone.direction)
-    speed_x, speed_y = obstacle_detection(drone, drone.line_coord, drone.direction)
+    distance_detected = distance_detection(drone, states.distance, states.start_position, states.direction)
+    speed_x, speed_y = obstacle_detection(drone, states.line_coord, states.direction)
     if drone.on_track:
         edge_detected = edge_detection(drone, fly_height=height, threshold=0.013)
         pass
@@ -86,7 +95,7 @@ def search_platform(drone:Drone, height):
     if distance_detected:
         drone.stop()
         # permet l'update des paramètres de déplacement selon le prochain segment
-        drone.next_segment = True
+        states.next_segment = True
     else:
         drone.start_linear_motion(speed_x, speed_y, 0)
         
@@ -163,8 +172,7 @@ if __name__ == '__main__':
         drone.start_logs()
 
         drone.take_off()
-        drone.next_segment = True
-        drone.segment = 0
+
         edge_detected = False
         while(not edge_detected):
             drone.stop_by_hand()

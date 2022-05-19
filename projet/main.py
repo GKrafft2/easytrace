@@ -13,7 +13,7 @@ from cflib.utils import uri_helper
 from drone import Drone
 
 # parties du projet
-from crossing_middle_zone import crossing_middle_zone
+from crossing_middle_zone import crossing_middle_zone, states as states_crossing
 from search_platform import search_platform
 from back_home import main_back_home
 from landing_procedure import landing_procedure
@@ -61,9 +61,9 @@ if __name__ == '__main__':
                 central_line = - (Arena.ORIGIN_Y - Arena.WIDTH/2)
                 # update de la direction par défault s'il y a un obstacle
                 if central_line > 0:
-                    drone.default_direction = 1   # gauche
+                    states_crossing.default_direction = 1   # gauche
                 else:
-                    drone.default_direction = -1  # droite
+                    states_crossing.default_direction = -1  # droite
                 state = States.CROSSING_MIDDLE_ZONE
 
             if state == States.CROSSING_MIDDLE_ZONE:
