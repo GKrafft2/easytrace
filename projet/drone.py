@@ -47,6 +47,9 @@ class Drone(MotionCommander):
         # Variables de commandes ()
         self.height_cmd = default_height
         self.default_speed = 0.3
+        self.speed_x = 0
+        self.speed_y = 0
+        self.speed_z = 0
 
         # Variables d'état
         # self.x = 0
@@ -288,8 +291,9 @@ class Drone(MotionCommander):
             sys.exit()
 
     def stop_brutal(self):
-        self.start_back(0.25)
-        time.sleep(0.3)
+        print(f' sx {self.speed_x}, sy {self.speed_y}')
+        self.start_linear_motion(-self.speed_x, -self.speed_y, -self.speed_z)
+        time.sleep(0.4)
         self.stop()
         time.sleep(0.5)
 
@@ -309,3 +313,11 @@ class Drone(MotionCommander):
         time.sleep(1)
         # execute Motion Commander method
         super(Drone, self).land(velocity)
+
+    def start_linear_motion(self, velocity_x_m, velocity_y_m, velocity_z_m, rate_yaw=0.0):
+
+        self.speed_x = velocity_x_m
+        self.speed_y = velocity_y_m
+        self.speed_z = velocity_z_m
+        # excecute Motion Commander method
+        super(Drone, self).start_linear_motion(velocity_x_m, velocity_y_m, velocity_z_m, rate_yaw)

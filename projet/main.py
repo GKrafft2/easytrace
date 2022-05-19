@@ -82,7 +82,7 @@ if __name__ == '__main__':
                     state = States.LANDING_P2
 
             if state == States.LANDING_P2:
-
+                # drone.stop()
                 # fonction bloquante
                 landing_procedure(drone, drone.direction, height=0.2)
                 state = States.GOING_HOME
@@ -90,6 +90,8 @@ if __name__ == '__main__':
             if state == States.GOING_HOME:
 
                 # fonction continue
+                # time.sleep(3)
+                # drone.land()
                 pass
                 # state = States.LANDING_P1
 

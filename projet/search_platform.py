@@ -89,11 +89,10 @@ def search_platform(drone:Drone, height):
     speed_x, speed_y = obstacle_detection(drone, states.line_coord, states.direction)
     if drone.on_track:
         edge_detected = edge_detection(drone, fly_height=height, threshold=0.016)
-        pass
     
     # le drone bouge tant que la distance souhaitée n'est pas atteinte
     if distance_detected:
-        drone.stop()
+        # drone.stop()
         # permet l'update des paramètres de déplacement selon le prochain segment
         states.next_segment = True
     else:
