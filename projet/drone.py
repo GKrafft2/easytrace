@@ -14,7 +14,7 @@ from arena import Arena
 
 import numpy as np
 import sys
-from projet.arena import Direction
+from arena import Direction
 from slam import Slam
 
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E702')
@@ -74,8 +74,13 @@ class Drone(MotionCommander):
         # variable de pattern (pour zigzag)
         self.next_segment = True
         self.segment = 0
+        self.distance = 0
+        self.start_position = 0
+        self.line_coord = 0
+        
 
-        # Variables et types correspondants à logger
+        # Variables et types cor
+        # respondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
         # range 'uint16_t' [mm] (up, front, left, ...)
         self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',

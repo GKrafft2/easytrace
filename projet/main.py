@@ -39,18 +39,19 @@ if __name__ == '__main__':
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
 
         # crée un drone (hérite de motion commander)
-        drone = Drone(scf, default_height=0.4)
+        drone = Drone(scf, default_height=0.2)
         drone.start_logs()
 
         # chronomètre le temps de vol
         start_time = time.perf_counter()
 
         # State machine
-        state = States.START
+        state = States.SEARCHING_PLATFORM
+        drone.take_off()
         while(state is not States.END):
 
             # fonction constemment évaluées
-            drone.update_slam()
+            # drone.update_slam()
             drone.stop_by_hand()
 
             if state == States.START:

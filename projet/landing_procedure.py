@@ -22,8 +22,8 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
     
     SPEED_FORWARD = 0.2                 # vitesse de déplacement vers l'avant
     SPEED_LATERAL = 0.1                 # vitesse de déplacement sur les côtés
-    DIST_CENTER_FRONTAL_ATTACK = 0.12   # distance de déplacement du bord vers l'avant
-    DIST_CENTER_LATERAL_ATTACK = 0.25   # distance de déplacement du bord vers la gauche
+    DIST_CENTER_FRONTAL_ATTACK = 0.08   # distance de déplacement du bord vers l'avant
+    DIST_CENTER_LATERAL_ATTACK = 0.2   # distance de déplacement du bord vers la gauche
 
     # Choisi l'orientation du drone pour attérir
     if direction == Direction.FORWARD: # référence
@@ -70,21 +70,19 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
     if search_first_edge:
         # Déplacement rectiligne jusqu'à la détection de la plateforme
         fly = True
+        time1 = time.time_ns()
         while(fly):
             drone.start_linear_motion(speed1_x, speed1_y, 0)
             drone.stop_by_hand()
             edge_detected = edge_detection(drone, fly_height=height, threshold=0.013)
             # attends une seconde de stabilisation avant d'accepter les edges
         
-            if edge_detected and time.time_ns()-time1 > 1*1e9:
+            if edge_detected and time.time_ns()-time1 > 2*1e9:
                 drone.stop()
                 fly = False
             time.sleep(0.1)
 
-            time1 = time.time_ns()
-            if time.time_ns()-time1 > 1*1e9:
-                drone.stop()
-
+    print("platforme operation")
     # avance un peu au centre de la plateforme
     drone.move_distance(dist_plateform_x, dist_plateform_y, 0, velocity=0.1) 
     # stabilisation
@@ -97,6 +95,7 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         position_history = drone.get_log('stateEstimate.x')
 
     fly = True
+    U_turn = False
     while(fly):
         drone.stop_by_hand()
 
@@ -108,14 +107,15 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         # si le drone cherche le bord sans le trouver au bout de 50cm,
         # c'est probablement que la plateforme était de l'autre côté
         if current_position < position_history - 0.5:
+            U_turn = True
+            # set la distance pareil que quand on monte
+            half_plateform_x /= (DIST_CENTER_LATERAL_ATTACK/DIST_CENTER_FRONTAL_ATTACK)
+            half_plateform_y /= (DIST_CENTER_LATERAL_ATTACK/DIST_CENTER_FRONTAL_ATTACK)
+
+        if U_turn == True:
             drone.start_linear_motion(speed2_x, speed2_y, 0)
-            position_history = -100
-            print('trop loin')
-            print(current_position, 'history', position_history)
         else:
             drone.start_linear_motion(-speed2_x, -speed2_y, 0)
-            print('bien')
-            print(current_position)
         
         edge_detected = edge_detection(drone, fly_height=height, threshold=0.03)
         
@@ -154,7 +154,7 @@ def go_to_P(drone:Drone, x, y):
 
     print(f'Position drone x = {position_estimate[0]:.3f} y = {position_estimate[1]:.3}')
     print(f'Position box x = {x:.3f} y = {y:.3f}')
-    print(f'Platform start x = {Platform.x_start:.3f} y = {Platform.y_start:.3f}')
+    # print(f'Platform start x = {Platform.x_start:.3f} y = {Platform.y_start:.3f}')
 
     while(fly):
         drone.stop_by_hand()
