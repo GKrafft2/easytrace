@@ -52,11 +52,11 @@ if __name__ == '__main__':
         while(state is not States.END):
 
             # fonction constemment évaluées
-            # drone.update_slam()
+            drone.update_slam()
             
 
             if state == States.START:
-                print(" ===== STATE START =====")
+                # print(" ===== STATE START =====")
                 drone.take_off()
                 #le drone suit la ligne au centre de l'arène
                 central_line = - (Arena.ORIGIN_Y - Arena.WIDTH/2)
@@ -68,33 +68,33 @@ if __name__ == '__main__':
                 state = States.CROSSING_MIDDLE_ZONE
 
             if state == States.CROSSING_MIDDLE_ZONE:
-                print(" ===== STATE CROSSING =====")
+                # print(" ===== STATE CROSSING =====")
                 # fonction continue
                 crossed_middle_zone = crossing_middle_zone(drone, central_line)
                 if crossed_middle_zone:
                     state = States.SEARCHING_PLATFORM
                     edge_detected = False
-                    drone.land()
-                    time.sleep(1)
+                    # drone.land()
+                    # time.sleep(1)
                     # drone.go_to(z=0.2)
-                    drone.take_off()
+                    # drone.take_off()
 
             if state == States.SEARCHING_PLATFORM:
-                print(" ===== STATE SEARCH PLATFORM =====")
+                # print(" ===== STATE SEARCH PLATFORM =====")
                 # fonction continue
                 edge_detected = search_platform(drone, height=0.2)
                 if edge_detected:
                     state = States.LANDING_P2
 
             if state == States.LANDING_P2:
-                print(" ===== STATE LANDING P2 =====")
+                # print(" ===== STATE LANDING P2 =====")
                 # drone.stop()
                 # fonction bloquante
                 landing_procedure(drone, drone.direction, height=0.2)
                 state = States.GOING_HOME
 
             if state == States.GOING_HOME:
-                print(" ===== STATE GOING HOME =====")
+                # print(" ===== STATE GOING HOME =====")
                 # fonction continue
                 # time.sleep(3)
                 # drone.land()
