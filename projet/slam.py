@@ -32,19 +32,19 @@ class Slam():
         if self.position_estimate[0] < self.map.shape[0] and self.position_estimate[1] < self.map.shape[1]:
             self.map[int(self.position_estimate[0])][int(self.position_estimate[1])] = self.blue
 
-        # obstcale mapping
-        if self.position_estimate[0] + self.range_sensors[0] < self.map.shape[0]:
-            if self.range_sensors[0] < self.thresh_obstcl:
-                self.map[int(self.position_estimate[0] + self.range_sensors[0])][int(self.position_estimate[1])] = self.red  # front
-        if self.position_estimate[0] - self.range_sensors[1] > 0:
-            if self.range_sensors[1] < self.thresh_obstcl:
-                self.map[int(self.position_estimate[0] - self.range_sensors[1])][int(self.position_estimate[1])] = self.red  # back
-        if self.position_estimate[1] + self.range_sensors[2] < self.map.shape[1]:
-            if self.range_sensors[2] < self.thresh_obstcl:
-                self.map[int(self.position_estimate[0])][int(self.position_estimate[1] + self.range_sensors[2])] = self.red  # left
-        if self.position_estimate[1] - self.range_sensors[3] > 0:
-            if self.range_sensors[3] < self.thresh_obstcl:
-                self.map[int(self.position_estimate[0])][int(self.position_estimate[1] - self.range_sensors[3])] = self.red  # right
+            # obstcale mapping
+            if self.position_estimate[0] + self.range_sensors[0] < self.map.shape[0]:
+                if self.range_sensors[0] < self.thresh_obstcl:
+                    self.map[int(self.position_estimate[0] + self.range_sensors[0])][int(self.position_estimate[1])] = self.red  # front
+            if self.position_estimate[0] - self.range_sensors[1] > 0:
+                if self.range_sensors[1] < self.thresh_obstcl:
+                    self.map[int(self.position_estimate[0] - self.range_sensors[1])][int(self.position_estimate[1])] = self.red  # back
+            if self.position_estimate[1] + self.range_sensors[2] < self.map.shape[1]:
+                if self.range_sensors[2] < self.thresh_obstcl:
+                    self.map[int(self.position_estimate[0])][int(self.position_estimate[1] + self.range_sensors[2])] = self.red  # left
+            if self.position_estimate[1] - self.range_sensors[3] > 0:
+                if self.range_sensors[3] < self.thresh_obstcl:
+                    self.map[int(self.position_estimate[0])][int(self.position_estimate[1] - self.range_sensors[3])] = self.red  # right
 
         # update the map
         self.map_update()
@@ -110,7 +110,7 @@ if __name__ == '__main__':
         drone.take_off()
 
         #fly_while_slam(drone)                  #without the slam class
-        fly_while_slam_class(drone, slam)     # with the slam class
+        # fly_while_slam_class(drone, slam)     # with the slam class
 
         print("land")
         drone.land()

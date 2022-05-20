@@ -46,6 +46,8 @@ class Drone(MotionCommander):
 
         # Variables de commandes ()
         self.height_cmd = default_height
+        self.__position_x_offset = 0
+        self.__position_y_offset = 0
         self.default_speed = 0.3
         self.speed_x = 0
         self.speed_y = 0
@@ -156,11 +158,19 @@ class Drone(MotionCommander):
         idx_variable = self.logs_variables.index(variable)
 
         if index is None :
-            return self.logs[self.count-1,idx_variable]
-        elif index is not None and array == True:
-            return self.logs[self.count-index:self.count,idx_variable]
+            data = self.logs[self.count-1,idx_variable]
+        # elif index is not None and array == True:
+        #     data =  self.logs[self.count-index:self.count,idx_variable]
         else: # index is not None and array == False:
-            return self.logs[self.count-index,idx_variable]
+            data = self.logs[self.count-index,idx_variable]
+        
+        # offset pour garder la position après atterissage
+        if variable == 'stateEstimate.x':
+            data += self.__position_x_offset
+        if variable == 'stateEstimate.y':
+            data += self.__position_y_offset
+
+        return data
 
     def start_logs(self):
         """ Start l'enregistrement des logs """
@@ -187,8 +197,11 @@ class Drone(MotionCommander):
 
     # ###############################################
     # ============= STATES FUNCTIONS ================
-    def update_states(self):
-        self.z_cmd = self.get_log('stateEstimate.z')
+    # def update_states(self):
+    #     self.z_cmd = self.get_log('stateEstimate.z')
+    def __save_position_landing(self):
+        self.__position_x_offset = self.get_log('stateEstimate.x')
+        self.__position_y_offset = self.get_log('stateEstimate.y')
 
     def refresh_logs(self):
         self.range_sensors[0] = self.get_log('range.front')
@@ -313,6 +326,8 @@ class Drone(MotionCommander):
         """ Vitesse de 1 = chute libre """
         # wait for the drone to stabilize
         time.sleep(1)
+        # save coordinates
+        self.__save_position_landing()
         # execute Motion Commander method
         super(Drone, self).land(velocity)
 

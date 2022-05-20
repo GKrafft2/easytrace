@@ -134,7 +134,7 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
 
     go_to_P(drone, center_x, center_y)
 
-    drone.land()
+    drone.land(velocity=0.07)
 
     landed = 1
 
