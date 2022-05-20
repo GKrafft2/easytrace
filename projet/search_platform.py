@@ -85,23 +85,20 @@ def search_platform(drone:Drone, height):
     # Vérifie la distance, la présence d'obstacles et la présence de la plateforme
     distance_detected = distance_detection(drone, states.distance, states.start_position, drone.direction)
     speed_x, speed_y = obstacle_detection(drone, states.line_coord, drone.direction)
-    if drone.on_track: # and states.segment != 0:
+    if drone.on_track:
         edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
     
     # le drone bouge tant que la distance souhaitée n'est pas atteinte
     if distance_detected:
-        print("distance")
         # drone.stop()
         # permet l'update des paramètres de déplacement selon le prochain segment
         states.next_segment = True
         # permet une rotation des segments de 1 à 4
         states.segment = (states.segment)%4+1
     else:
-        print("not distance")
         if not edge_detected:
             drone.start_linear_motion(speed_x, speed_y, 0)
         else:
-            print(" stop SSSSSTTTTTTOOOOOPPPPPP")
             drone.stop()  
         
     return edge_detected

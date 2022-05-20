@@ -46,16 +46,12 @@ if __name__ == '__main__':
         start_time = time.perf_counter()
 
         # State machine
-        # state = States.START
-        state = States.SEARCHING_PLATFORM
-        drone.take_off()
-        time.sleep(1)
-        # drone.move_distance(0, 0.1, 0, 0.2)
+        state = States.START
+
         while(state is not States.END):
 
             # fonction constemment évaluées
-            # drone.update_slam()
-            
+            drone.update_slam()
 
             if state == States.START:
                 # print(" ===== STATE START =====")
@@ -90,26 +86,25 @@ if __name__ == '__main__':
                 # drone.stop()
                 # fonction bloquante
                 landing_procedure(drone, drone.direction, height=0.2)
+                drone.slam.save_img()
                 state = States.GOING_HOME
+                drone.take_off()
 
             if state == States.GOING_HOME:
                 # print(" ===== STATE GOING HOME =====")
+
+                # fonction continue
                 going_home_line = 0
                 arrived_home = main_back_home(drone, going_home_line)
                 if arrived_home:
                     state = States.LANDING_P1
-                # fonction continue
-                # time.sleep(3)
-                # drone.land()
-                # pass
-                # state = States.LANDING_P1
-
+                
             if state == States.LANDING_P1:
                 print(" ===== STATE LANDING P1 =====")
                 # fonction bloquante
                 # landing_procedure(drone, drone.direction, height=0.2, search_first_edge=True)
                 drone.land()
-        
+                state = States.END
             # Délai important pour ne pas overflood les envois de données au drone
             time.sleep(0.1)
             drone.stop_by_hand()
@@ -121,7 +116,9 @@ if __name__ == '__main__':
         print(f'Total fly time : {timedelta(seconds=round(end_time-start_time, 0))} \n')    
 
         drone.slam.hold()
+        drone.slam.save_img()
 
+        input("Press Enter to delete SLAM...")
 
 
       

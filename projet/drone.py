@@ -46,8 +46,8 @@ class Drone(MotionCommander):
 
         # Variables de commandes ()
         self.height_cmd = default_height
-        self.__position_x_offset = 0
-        self.__position_y_offset = 0
+        self.position_x_offset = 0
+        self.position_y_offset = 0
         self.default_speed = 0.3
         self.speed_x = 0
         self.speed_y = 0
@@ -58,8 +58,8 @@ class Drone(MotionCommander):
         # self.y = 0
         self.z_cmd = 0
         self.direction = Direction.FORWARD
-        self.TRESHOLD_UP = 0.013
-        self.THRESHOLD_DOWN = 0.015
+        self.TRESHOLD_UP = 0.03
+        self.THRESHOLD_DOWN = 0.03
 
         # sensor variables
         self.range_sensors = np.empty(5)
@@ -166,9 +166,9 @@ class Drone(MotionCommander):
         
         # offset pour garder la position après atterissage
         if variable == 'stateEstimate.x':
-            data += self.__position_x_offset
+            data += self.position_x_offset
         if variable == 'stateEstimate.y':
-            data += self.__position_y_offset
+            data += self.position_y_offset
 
         return data
 
@@ -200,8 +200,8 @@ class Drone(MotionCommander):
     # def update_states(self):
     #     self.z_cmd = self.get_log('stateEstimate.z')
     def __save_position_landing(self):
-        self.__position_x_offset = self.get_log('stateEstimate.x')
-        self.__position_y_offset = self.get_log('stateEstimate.y')
+        self.position_x_offset = self.get_log('stateEstimate.x')
+        self.position_y_offset = self.get_log('stateEstimate.y')
 
     def refresh_logs(self):
         self.range_sensors[0] = self.get_log('range.front')

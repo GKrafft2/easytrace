@@ -182,7 +182,7 @@ def zone_P2_detection(drone:Drone):
 
     arrival = False
 
-    if drone.get_log('stateEstimate.x') >= Arena.START_ZONE_2:
+    if drone.get_log('stateEstimate.x') >= Arena.START_ZONE_2 + 0.15:
         arrival = True
 
     return arrival

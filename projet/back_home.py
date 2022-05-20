@@ -21,9 +21,10 @@ def main_back_home(drone:Drone, going_home_line):
 
     position_estimate[0] = drone.get_log('stateEstimate.x')
     position_estimate[1] = drone.get_log('stateEstimate.y')
+    print(f"x = {position_estimate[0]:.3f}  y = {position_estimate[1]:.3f}")
     threshold_landing = 0.05
 
-    if (abs(position_estimate[0] - 0) <= threshold_landing) and (abs(position_estimate[1] - 0) <= threshold_landing):
+    if (abs(position_estimate[0] - Arena.ORIGIN_X) <= threshold_landing) and (abs(position_estimate[1] - Arena.ORIGIN_Y) <= threshold_landing):
         arrived = True
     if not arrived:
         drone.start_linear_motion(speed_x, speed_y, 0)
@@ -45,7 +46,9 @@ if __name__ == '__main__':
         drone.start_logs()
 
         drone.take_off()
-        drone.go_to(1.5, 1)
+        # drone.go_to(1.5, 1)
+        drone.position_x_offset = 4.250
+        drone.position_y_offset = 0.181
 
         arrived_home = False
         while(not arrived_home):

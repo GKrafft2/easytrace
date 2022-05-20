@@ -12,15 +12,16 @@ from arena import Arena
 
 class Slam():
     def __init__(self):
-        self.map_shape = (500, 300)
+        padding = 100
+        self.map_shape = ((500+padding), (300+padding))
         self.map = np.zeros(self.map_shape)
-        self.offset_x = Arena.ORIGIN_X * 100
-        self.offset_y = Arena.ORIGIN_Y * 100
+        self.offset_x = Arena.ORIGIN_X * 100 + padding/2
+        self.offset_y = Arena.ORIGIN_Y * 100 + padding/2
         self.range_sensors = np.empty(5)
         self.position_estimate = [self.offset_x, self.offset_y]
         self.thresh_obstcl = 50
         self.blue = 128
-        self.red = 255
+        self.red = 190
 
     def update(self, range_sensor, position_estimates):
         self.range_sensors[0:4] = np.floor(range_sensor[0:4]/10)
@@ -59,6 +60,10 @@ class Slam():
         imS = cv2.rotate(imS, cv2.ROTATE_180)  # rotate
         cv2.imshow('image', imS)
         cv2.waitKey(1)
+
+    def save_img(self):
+        # image_path = r'C:\Users\hirtt\Documents\GitHub\easytrace\projet\images'
+        cv2.imwrite("slam.jpg", self.map)
 
 # def fly_while_slam_class(drone:Drone, slam:Slam):
 #     range_sensors = np.empty(5)
