@@ -56,6 +56,8 @@ class Drone(MotionCommander):
         # self.y = 0
         self.z_cmd = 0
         self.direction = Direction.FORWARD
+        self.TRESHOLD_UP = 0.008
+        self.THRESHOLD_DOWN = 0.015
 
         # sensor variables
         self.range_sensors = np.empty(5)

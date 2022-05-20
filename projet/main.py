@@ -52,7 +52,7 @@ if __name__ == '__main__':
         while(state is not States.END):
 
             # fonction constemment évaluées
-            drone.update_slam()
+            # drone.update_slam()
             
 
             if state == States.START:
@@ -74,10 +74,7 @@ if __name__ == '__main__':
                 if crossed_middle_zone:
                     state = States.SEARCHING_PLATFORM
                     edge_detected = False
-                    # drone.land()
-                    # time.sleep(1)
-                    # drone.go_to(z=0.2)
-                    # drone.take_off()
+                    # time.sleep(2)
 
             if state == States.SEARCHING_PLATFORM:
                 # print(" ===== STATE SEARCH PLATFORM =====")

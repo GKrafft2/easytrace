@@ -74,7 +74,7 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         while(fly):
             drone.start_linear_motion(speed1_x, speed1_y, 0)
             drone.stop_by_hand()
-            edge_detected = edge_detection(drone, fly_height=height, threshold=0.013)
+            edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
             # attends une seconde de stabilisation avant d'accepter les edges
         
             if edge_detected and time.time_ns()-time1 > 2*1e9:
@@ -114,10 +114,11 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
 
         if U_turn == True:
             drone.start_linear_motion(speed2_x, speed2_y, 0)
+            edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
         else:
             drone.start_linear_motion(-speed2_x, -speed2_y, 0)
+            edge_detected = edge_detection(drone, fly_height=height, threshold=drone.THRESHOLD_DOWN)
         
-        edge_detected = edge_detection(drone, fly_height=height, threshold=0.03)
         
         if edge_detected:
             drone.stop()
@@ -195,7 +196,7 @@ if __name__ == '__main__':
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
 
         # crée un drone (hérite de motion commander)
-        drone = Drone(scf, default_height=0.4)
+        drone = Drone(scf, default_height=0.2)
         
         drone.start_logs()
 

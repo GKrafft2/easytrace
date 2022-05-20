@@ -8,8 +8,6 @@ from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.utils import uri_helper
 
-from drone import Drone
-
 from arena import Arena
 
 class Slam():
@@ -99,9 +97,11 @@ if __name__ == '__main__':
     cflib.crtp.init_drivers()
     # identifiant radio du drone
     URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E702')
+    from drone import Drone
 
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
         # crée un drone (hérite de motion commander)
+
         drone = Drone(scf, default_height=0.2)
         slam = Slam()
 
