@@ -25,23 +25,23 @@ def crossing_middle_zone(drone:Drone, central_line):
 
         # Vérifie l'arrivée dans la zone de la seconde plateforme et la présence d'obstacles
         arrival = zone_P2_detection(drone)
-        speed_x, speed_y = obstacle_detection(drone, central_line, Direction.FORWARD)
+        speed_x, speed_y = obstacle_detection(drone, central_line, forward_speed=0.3, direction=Direction.FORWARD)
             
         if not arrival: 
             drone.start_linear_motion(speed_x, speed_y, 0)            
 
         return arrival
 
-def obstacle_detection(drone:Drone, line_coord, direction:Direction):
+def obstacle_detection(drone:Drone, line_coord, forward_speed, direction:Direction):
     """ detect obstacle and return a pair of speed (x,y) to avoid
         Param: line_position the y line to follow from drone origin """
 
     AVOID_DIST_FRONT = 400  # mm
     AVOID_SPEED_LAT = 0.5 
-    AVOID_SPEED_COME_BACK = 0.2
+    AVOID_SPEED_COME_BACK = forward_speed
     AVOID_TIME_COME_BACK = 2 # secondes
     AVOID_SPEED_FRONT = 0.6
-    FORWARD_SPEED = 0.2
+    FORWARD_SPEED = forward_speed
     # ======= adaptation de la distance latérale ==============
     # si le drone est sur la bonne trajectoire, il sera moins sensible que s'il revient en position
     if drone.on_track:

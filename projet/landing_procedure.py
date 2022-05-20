@@ -20,9 +20,9 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         avant de retourner au centre avec un controleur P
     """
     
-    SPEED_FORWARD = 0.2                 # vitesse de déplacement vers l'avant
+    SPEED_FORWARD = 0.3            # vitesse de déplacement vers l'avant
     SPEED_LATERAL = 0.1                 # vitesse de déplacement sur les côtés
-    DIST_CENTER_FRONTAL_ATTACK = 0.08   # distance de déplacement du bord vers l'avant
+    DIST_CENTER_FRONTAL_ATTACK = 0.02   # distance de déplacement du bord vers l'avant avec vitesse 0.2 mettre 0.04
     DIST_CENTER_LATERAL_ATTACK = 0.2   # distance de déplacement du bord vers la gauche
 
     # Choisi l'orientation du drone pour attérir
@@ -88,8 +88,12 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
             
 
     print("platforme operation")
+    # time.sleep(0.1)
     # avance un peu au centre de la plateforme
-    drone.move_distance(dist_plateform_x, dist_plateform_y, 0, velocity=0.1) 
+    # drone.stop()
+    drone.move_distance(dist_plateform_x, dist_plateform_y, 0, velocity=0.05) 
+    #revient un peu en arrière
+    # drone.move_distance(-dist_plateform_x, -dist_plateform_y, 0, velocity=0.05)
     # drone.stop()
     # stabilisation
     time.sleep(2)

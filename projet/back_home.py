@@ -18,10 +18,10 @@ class states_test():
     test = False
 
 def main_back_home(drone:Drone, going_home_line):
-    range_sensors = np.empty(5)
+
     position_estimate = [0, 0]
     arrived = False
-    speed_x, speed_y = obstacle_detection(drone, going_home_line, Direction.BACKWARD)
+    speed_x, speed_y = obstacle_detection(drone, going_home_line, forward_speed=0.3, direction=Direction.BACKWARD)
 
     position_estimate[0] = drone.get_log('stateEstimate.x')
     position_estimate[1] = drone.get_log('stateEstimate.y')
@@ -31,7 +31,7 @@ def main_back_home(drone:Drone, going_home_line):
     edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
     if edge_detected:
         states_test.test = True
-    if (abs(position_estimate[0] - 0) <= threshold_landing) and (abs(position_estimate[1] - 0) <= threshold_landing):
+    if (position_estimate[0] <= threshold_landing) and (abs(position_estimate[1] - 0) <= threshold_landing):
         arrived = True
     if not arrived:
         drone.start_linear_motion(speed_x, speed_y, 0)

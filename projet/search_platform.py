@@ -84,7 +84,7 @@ def search_platform(drone:Drone, height):
 
     # Vérifie la distance, la présence d'obstacles et la présence de la plateforme
     distance_detected = distance_detection(drone, states.distance, states.start_position, drone.direction)
-    speed_x, speed_y = obstacle_detection(drone, states.line_coord, drone.direction)
+    speed_x, speed_y = obstacle_detection(drone, states.line_coord, forward_speed=0.3, direction=drone.direction)
     if drone.on_track:
         edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
     
