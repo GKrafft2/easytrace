@@ -12,6 +12,10 @@ from cflib.utils import uri_helper
 from drone import Drone
 from arena import Arena, Direction
 from crossing_middle_zone import obstacle_detection
+from search_platform import edge_detection
+
+class states_test():
+    test = False
 
 def main_back_home(drone:Drone, going_home_line):
     range_sensors = np.empty(5)
@@ -22,9 +26,12 @@ def main_back_home(drone:Drone, going_home_line):
     position_estimate[0] = drone.get_log('stateEstimate.x')
     position_estimate[1] = drone.get_log('stateEstimate.y')
     print(f"x = {position_estimate[0]:.3f}  y = {position_estimate[1]:.3f}")
+    height = 0.2
     threshold_landing = 0.05
-
-    if (abs(position_estimate[0] - Arena.ORIGIN_X) <= threshold_landing) and (abs(position_estimate[1] - Arena.ORIGIN_Y) <= threshold_landing):
+    edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
+    if edge_detected:
+        states_test.test = True
+    if (abs(position_estimate[0] - 0) <= threshold_landing) and (abs(position_estimate[1] - 0) <= threshold_landing):
         arrived = True
     if not arrived:
         drone.start_linear_motion(speed_x, speed_y, 0)
@@ -55,8 +62,10 @@ if __name__ == '__main__':
             drone.update_slam()
             drone.stop_by_hand()
             arrived_home = main_back_home(drone, going_home_line)
+            time.sleep(0.1)
 
         drone.land()
+        print(f'the drone detected an edge {states_test.test}')
         drone.slam.hold()
 
         drone.stop_logs(save=False)
