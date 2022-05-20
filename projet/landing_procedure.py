@@ -72,19 +72,25 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         fly = True
         time1 = time.time_ns()
         while(fly):
+
+            time.sleep(0.1)
+
             drone.start_linear_motion(speed1_x, speed1_y, 0)
             drone.stop_by_hand()
             edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
             # attends une seconde de stabilisation avant d'accepter les edges
         
-            if edge_detected and time.time_ns()-time1 > 2*1e9:
-                drone.stop()
+            if edge_detected and time.time_ns()-time1 > 1*1e9:
+                print("stop home function")
+                # time.sleep(0.5)
+                # drone.stop_brutal()
                 fly = False
-            time.sleep(0.1)
+            
 
     print("platforme operation")
     # avance un peu au centre de la plateforme
     drone.move_distance(dist_plateform_x, dist_plateform_y, 0, velocity=0.1) 
+    # drone.stop()
     # stabilisation
     time.sleep(2)
 
@@ -93,8 +99,9 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         position_history = drone.get_log('stateEstimate.y')
     elif direction == Direction.LEFT or direction == Direction.RIGHT:
         position_history = drone.get_log('stateEstimate.x')
-
+    print("cherche edge 2")
     fly = True
+    # si était au bord dès le début et n'a pas pu détecter la platforme, fait demi tour
     U_turn = False
     while(fly):
         drone.stop_by_hand()
@@ -124,14 +131,14 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
             drone.stop()
             fly = False
         time.sleep(0.1)
-
+    print("stabilisation")
     # stabilisation
     time.sleep(2)
 
     # on estime le centre de la box en fonction de là où il detecte un edge
     center_x = drone.get_log('stateEstimate.x') + half_plateform_x
     center_y = drone.get_log('stateEstimate.y') + half_plateform_y
-
+    print("go to P")
     go_to_P(drone, center_x, center_y)
 
     drone.land(velocity=0.07)

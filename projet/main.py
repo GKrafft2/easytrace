@@ -46,8 +46,10 @@ if __name__ == '__main__':
         start_time = time.perf_counter()
 
         # State machine
-        state = States.START
-        # drone.take_off()
+        # state = States.START
+        state = States.SEARCHING_PLATFORM
+        drone.take_off()
+        time.sleep(1)
         # drone.move_distance(0, 0.1, 0, 0.2)
         while(state is not States.END):
 
@@ -107,7 +109,7 @@ if __name__ == '__main__':
             time.sleep(0.1)
             drone.stop_by_hand()
 
-        drone.stop_logs()
+        drone.stop_logs(save=False)
 
         # affiche le temps de vol
         end_time = time.perf_counter()

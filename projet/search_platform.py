@@ -90,13 +90,19 @@ def search_platform(drone:Drone, height):
     
     # le drone bouge tant que la distance souhaitée n'est pas atteinte
     if distance_detected:
+        print("distance")
         # drone.stop()
         # permet l'update des paramètres de déplacement selon le prochain segment
         states.next_segment = True
         # permet une rotation des segments de 1 à 4
         states.segment = (states.segment)%4+1
     else:
-        drone.start_linear_motion(speed_x, speed_y, 0)
+        print("not distance")
+        if not edge_detected:
+            drone.start_linear_motion(speed_x, speed_y, 0)
+        else:
+            print(" stop SSSSSTTTTTTOOOOOPPPPPP")
+            drone.stop()  
         
     return edge_detected
 
@@ -145,7 +151,7 @@ def edge_detection(drone:Drone, fly_height, threshold):
     if height > fly_height-0.02:
         drone.zrange = np.append(drone.zrange, height)
         drone.zrange = drone.zrange[1:]
-        # print(drone.zrange)
+        print(drone.zrange)
 
     # Détecte un changement de hauteur selon le threshold = détection de la plateforme
     moy = np.mean(drone.zrange[:-1])
@@ -155,7 +161,6 @@ def edge_detection(drone:Drone, fly_height, threshold):
     if drone.zrange[0] != 0 and moy > fly_height-0.05 and (drone.zrange[-1] < moy - threshold or drone.zrange[-1] > moy + threshold): #detecte si on est passé au dessus de qqch (plateforme)
         print("edge found")
         edge_detected = True
-        drone.stop()
 
     return edge_detected
 
