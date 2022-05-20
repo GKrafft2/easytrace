@@ -92,16 +92,21 @@ if __name__ == '__main__':
 
             if state == States.GOING_HOME:
                 # print(" ===== STATE GOING HOME =====")
+                going_home_line = 0
+                arrived_home = main_back_home(drone, going_home_line)
+                if arrived_home:
+                    state = States.LANDING_P1
                 # fonction continue
                 # time.sleep(3)
                 # drone.land()
-                pass
+                # pass
                 # state = States.LANDING_P1
 
             if state == States.LANDING_P1:
                 print(" ===== STATE LANDING P1 =====")
                 # fonction bloquante
-                landing_procedure(drone, drone.direction, height=0.2, search_first_edge=True)
+                # landing_procedure(drone, drone.direction, height=0.2, search_first_edge=True)
+                drone.land()
         
             # Délai important pour ne pas overflood les envois de données au drone
             time.sleep(0.1)
