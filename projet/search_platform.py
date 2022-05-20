@@ -26,7 +26,7 @@ class states():
 def search_platform(drone:Drone, height):
 
     # distances à parcourir selon l'axe x et l'axe y, comme définit par l'arène
-    DISTANCE_Y = Arena.WIDTH/6
+    DISTANCE_Y = Arena.WIDTH
     DISTANCE_X = Platform.SIZE
 
     edge_detected = False
@@ -38,7 +38,6 @@ def search_platform(drone:Drone, height):
     # les paramètres du pattern sont actualisé à chaque nouveau segment
     if states.next_segment:
         position_estimate = update_position(drone)                # Position estimée du drone au début du segment
-
         # Premier déplacement pour rejoindre le bord de l'arène, n'est effectué qu'une fois
         if states.segment == 0:
             print("segment 0")
@@ -80,15 +79,17 @@ def search_platform(drone:Drone, height):
         states.segment = (states.segment)%4+1
 
         # quitte si en dehors de l'arène
-        if (position_estimate[0]) > Arena.REGION_LENGTH:
+        if (position_estimate[0]) > Arena.LENGTH - Arena.ORIGIN_X:
             print("En dehors des limites")
             return True
+
+    # print(f'distance = {states.distance:.2f} start')
 
     # Vérifie la distance, la présence d'obstacles et la présence de la plateforme
     distance_detected = distance_detection(drone, states.distance, states.start_position, states.direction)
     speed_x, speed_y = obstacle_detection(drone, states.line_coord, states.direction)
-    if drone.on_track:
-        edge_detected = edge_detection(drone, fly_height=height, threshold=0.016)
+    if drone.on_track and states.segment != 0:
+        edge_detected = edge_detection(drone, fly_height=height, threshold=0.013)
     
     # le drone bouge tant que la distance souhaitée n'est pas atteinte
     if distance_detected:
@@ -124,8 +125,11 @@ def distance_detection(drone:Drone, distance, start_position, direction):
             distance_detected = True
 
     if direction == Direction.LEFT:
+
+        print(f"{(start_position+distance):.3f} < {drone.get_log('stateEstimate.y'):.3f}")
         if start_position + distance < drone.get_log('stateEstimate.y'):
             distance_detected = True
+            print("in condition")
         
     if direction == Direction.RIGHT:
         if start_position - distance > drone.get_log('stateEstimate.y'):

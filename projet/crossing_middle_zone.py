@@ -28,9 +28,7 @@ def crossing_middle_zone(drone:Drone, central_line):
         speed_x, speed_y = obstacle_detection(drone, central_line, Direction.FORWARD)
             
         if not arrival: 
-            drone.start_linear_motion(speed_x, speed_y, 0)
-        else:
-            drone.stop()
+            drone.start_linear_motion(speed_x, speed_y, 0)            
 
         return arrival
 
