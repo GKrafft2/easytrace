@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
                 # fonction continue
                 going_home_line = 0
-                arrived_home = main_back_home(drone, going_home_line)
+                arrived_home = main_back_home(drone, going_home_line, height=0.2)
                 if arrived_home:
                     state = States.LANDING_P1
                 
