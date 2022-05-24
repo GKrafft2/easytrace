@@ -22,10 +22,11 @@ from arena import Arena
 class States(Enum):
     START = -1
     CROSSING_MIDDLE_ZONE = 0
-    SEARCHING_PLATFORM = 1
+    SEARCHING_PLATFORM_P2 = 1
     LANDING_P2 = 2
     GOING_HOME = 3
     LANDING_P1 = 4
+    SEARCHING_PLATFORM_P1 = 5
     END = 5
 
 
@@ -70,14 +71,14 @@ if __name__ == '__main__':
                 # fonction continue
                 crossed_middle_zone = crossing_middle_zone(drone, central_line)
                 if crossed_middle_zone:
-                    state = States.SEARCHING_PLATFORM
+                    state = States.SEARCHING_PLATFORM_P2
                     edge_detected = False
                     # time.sleep(2)
 
-            if state == States.SEARCHING_PLATFORM:
+            if state == States.SEARCHING_PLATFORM_P2:
                 # print(" ===== STATE SEARCH PLATFORM =====")
                 # fonction continue
-                edge_detected = search_platform(drone, height=0.2)
+                edge_detected = search_platform(drone, Arena.WIDTH, Arena.LIM_WEST - drone.get_log('stateEstimate.y'), height=0.2)
                 if edge_detected:
                     state = States.LANDING_P2
 
@@ -95,16 +96,24 @@ if __name__ == '__main__':
 
                 # fonction continue
                 going_home_line = 0
-                arrived_home = main_back_home(drone, going_home_line, height=0.2)
-                if arrived_home:
+                arrived_home, on_platform = main_back_home(drone, going_home_line, height=0.2)
+                if arrived_home and on_platform:
                     state = States.LANDING_P1
+                if arrived_home and not on_platform:
+                    state = States.SEARCHING_PLATFORM_P1
                 
             if state == States.LANDING_P1:
-                print(" ===== STATE LANDING P1 =====")
                 # fonction bloquante
-                # landing_procedure(drone, drone.direction, height=0.2, search_first_edge=True)
-                drone.land()
+                landing_procedure(drone, drone.direction, height=0.2)
                 state = States.END
+
+            if state == States.SEARCHING_PLATFORM_P1:
+                # fonction continue
+                edge_detected = search_platform(drone, 1, 0.5 ,height=0.2)
+                if edge_detected:
+                    state = States.LANDING_P1
+
+
             # Délai important pour ne pas overflood les envois de données au drone
             time.sleep(0.1)
             drone.stop_by_hand()

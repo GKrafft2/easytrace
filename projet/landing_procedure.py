@@ -64,6 +64,19 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
 
         half_plateform_x = DIST_CENTER_LATERAL_ATTACK
         half_plateform_y = 0
+
+    elif direction == Direction.BACKWARD:
+        speed1_x = -SPEED_FORWARD
+        speed1_y = 0
+
+        dist_plateform_x = -DIST_CENTER_FRONTAL_ATTACK
+        dist_plateform_y = 0
+
+        speed2_x = 0
+        speed2_y = SPEED_LATERAL
+
+        half_plateform_x = 0
+        half_plateform_y = DIST_CENTER_LATERAL_ATTACK
     
     # exécution uniquement si la fonction est lancée individuellement
     # search_first_edge doit être False si la foncion est exécutée après la recherche de plateforme

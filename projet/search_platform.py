@@ -22,10 +22,10 @@ class states():
     line_coord = 0
 
 
-def search_platform(drone:Drone, height):
+def search_platform(drone:Drone, dimension_y, position_wall_west, height):
 
     # distances à parcourir selon l'axe x et l'axe y, comme définit par l'arène
-    DISTANCE_Y = Arena.WIDTH
+    DISTANCE_Y = dimension_y
     DISTANCE_X = Platform.SIZE
 
     edge_detected = False
@@ -41,7 +41,7 @@ def search_platform(drone:Drone, height):
         if states.segment == 0:
             print("segment 0")
             drone.direction = Direction.LEFT                          # direction principale de déplacement
-            states.distance = Arena.LIM_WEST - position_estimate[1]    # Distance rectiligne à parcourir
+            states.distance = position_wall_west                      # Distance rectiligne à parcourir
             states.start_position = position_estimate[1]               # Coordonnée de départ du segment, selon la direction définie
             states.line_coord = position_estimate[0]                   # Coordonnée ("vecteur") de la ligne à suivre
         # Premier segment, avance en x
@@ -75,10 +75,10 @@ def search_platform(drone:Drone, height):
             
         states.next_segment = False
 
-        # quitte si en dehors de l'arène
-        if (position_estimate[0]) > Arena.LENGTH - Arena.ORIGIN_X:
-            print("En dehors des limites")
-            return True
+        # # quitte si en dehors de l'arène
+        # if (position_estimate[0]) > Arena.LENGTH - Arena.ORIGIN_X:
+        #     print("En dehors des limites")
+        #     return True
 
     # print(f'distance = {states.distance:.2f} start')
 
