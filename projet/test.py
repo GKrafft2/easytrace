@@ -37,34 +37,37 @@ if __name__ == '__main__':
         start_time = time.perf_counter()
         
         drone.take_off()
-        reached = False
-        while(not reached):
-            reached = distance_detection(drone, 0.2, 0, Direction.FORWARD)
-            if not reached:
-                drone.start_linear_motion(0.2, 0, 0)
-            print(drone.get_log('stateEstimate.x'))
-            time.sleep(0.1)
+        drone.move_distance(distance_x_m=-0.6, distance_y_m=0, distance_z_m=0, velocity=0.2)
 
-        drone.go_to(z=0.003, velocity=0.1)
         drone.land()
-        time.sleep(1)
-        drone.take_off()
-        reached = False
-        while(not reached):
-            reached = distance_detection(drone, 0.2, 0, Direction.FORWARD)
-            if not reached:
-                drone.start_linear_motion(0.2, 0, 0)
-            print(drone.get_log('stateEstimate.x'))
-            time.sleep(0.1)
-        drone.land(velocity=0.05)
+        # reached = False
+        # while(not reached):
+        #     reached = distance_detection(drone, 0.2, 0, Direction.FORWARD)
+        #     if not reached:
+        #         drone.start_linear_motion(0.2, 0, 0)
+        #     print(drone.get_log('stateEstimate.x'))
+        #     time.sleep(0.1)
 
-        drone.stop_logs()
+        # drone.go_to(z=0.003, velocity=0.1)
+        # drone.land()
+        # time.sleep(1)
+        # drone.take_off()
+        # reached = False
+        # while(not reached):
+        #     reached = distance_detection(drone, 0.2, 0, Direction.FORWARD)
+        #     if not reached:
+        #         drone.start_linear_motion(0.2, 0, 0)
+        #     print(drone.get_log('stateEstimate.x'))
+        #     time.sleep(0.1)
+        # drone.land(velocity=0.05)
 
-        # affiche le temps de vol
-        end_time = time.perf_counter()
-        print(f'Total fly time : {timedelta(seconds=round(end_time-start_time, 0))} \n')    
+        # drone.stop_logs()
 
-        drone.slam.hold()
+        # # affiche le temps de vol
+        # end_time = time.perf_counter()
+        # print(f'Total fly time : {timedelta(seconds=round(end_time-start_time, 0))} \n')    
+
+        # drone.slam.hold()
 
 
 

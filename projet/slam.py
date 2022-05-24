@@ -12,7 +12,7 @@ from arena import Arena
 
 class Slam():
     def __init__(self):
-        padding = 100
+        padding = 200
         self.map_shape = ((500+padding), (300+padding))
         self.map = np.zeros(self.map_shape)
         self.offset_x = Arena.ORIGIN_X * 100 + padding/2
@@ -22,6 +22,12 @@ class Slam():
         self.thresh_obstcl = 50
         self.blue = 128
         self.red = 190
+    
+    def draw9(self,x,y,color):
+        list = [-1,0,1]
+        for a in list:
+            for b in list:
+                self.map[x+a][y+b] = color
 
     def update(self, range_sensor, position_estimates):
         self.range_sensors[0:4] = np.floor(range_sensor[0:4]/10)
@@ -31,21 +37,25 @@ class Slam():
 
         # position mapping
         if self.position_estimate[0] < self.map.shape[0] and self.position_estimate[1] < self.map.shape[1]:
-            self.map[int(self.position_estimate[0])][int(self.position_estimate[1])] = self.blue
+            self.draw9(int(self.position_estimate[0]),int(self.position_estimate[1]),self.blue)
 
             # obstcale mapping
             if self.position_estimate[0] + self.range_sensors[0] < self.map.shape[0]:
                 if self.range_sensors[0] < self.thresh_obstcl:
-                    self.map[int(self.position_estimate[0] + self.range_sensors[0])][int(self.position_estimate[1])] = self.red  # front
+                    #self.map[int(self.position_estimate[0] + self.range_sensors[0])][int(self.position_estimate[1])] = self.red
+                    self.draw9(int(self.position_estimate[0] + self.range_sensors[0]),int(self.position_estimate[1]),self.red)  # front
             if self.position_estimate[0] - self.range_sensors[1] > 0:
                 if self.range_sensors[1] < self.thresh_obstcl:
-                    self.map[int(self.position_estimate[0] - self.range_sensors[1])][int(self.position_estimate[1])] = self.red  # back
+                    #self.map[int(self.position_estimate[0] - self.range_sensors[1])][int(self.position_estimate[1])] = self.red  
+                    self.draw9(int(self.position_estimate[0] - self.range_sensors[1]),int(self.position_estimate[1]),self.red) # back
             if self.position_estimate[1] + self.range_sensors[2] < self.map.shape[1]:
                 if self.range_sensors[2] < self.thresh_obstcl:
-                    self.map[int(self.position_estimate[0])][int(self.position_estimate[1] + self.range_sensors[2])] = self.red  # left
+                    #self.map[int(self.position_estimate[0])][int(self.position_estimate[1] + self.range_sensors[2])] = self.red  
+                    self.draw9(int(self.position_estimate[0]),int(self.position_estimate[1] + self.range_sensors[2]),self.red)# left
             if self.position_estimate[1] - self.range_sensors[3] > 0:
                 if self.range_sensors[3] < self.thresh_obstcl:
-                    self.map[int(self.position_estimate[0])][int(self.position_estimate[1] - self.range_sensors[3])] = self.red  # right
+                    #self.map[int(self.position_estimate[0])][int(self.position_estimate[1] - self.range_sensors[3])] = self.red  
+                    self.draw9(int(self.position_estimate[0]),int(self.position_estimate[1] - self.range_sensors[3]),self.red) #right
 
         # update the map
         self.map_update()

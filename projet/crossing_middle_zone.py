@@ -18,28 +18,29 @@ class states():
     obstacle_lateral = False   # si obstacle lateral
     obstacle_wait = False      # pour essayer de revenir après un obstacle
     default_direction = -1     # direction droite (-1) ou gauche (1) pour l'évitement frontale
-    time1 = 0
-    time2 = 0
+    time_since_obstacle = 0    # temps depuis le dernier obstacle vu
+    time_choice = 0            # le temps diffère selon l'obstacle est frontal ou latéral
 
 def crossing_middle_zone(drone:Drone, central_line):
 
         # Vérifie l'arrivée dans la zone de la seconde plateforme et la présence d'obstacles
         arrival = zone_P2_detection(drone)
-        speed_x, speed_y = obstacle_detection(drone, central_line, forward_speed=0.3, direction=Direction.FORWARD)
+        speed_x, speed_y = obstacle_detection(drone, central_line, forward_speed=0.3, lateral_come_back_speed=0.3, direction=Direction.FORWARD)
             
         if not arrival: 
             drone.start_linear_motion(speed_x, speed_y, 0)            
 
         return arrival
 
-def obstacle_detection(drone:Drone, line_coord, forward_speed, direction:Direction):
+def obstacle_detection(drone:Drone, line_coord, forward_speed, lateral_come_back_speed, direction:Direction):
     """ detect obstacle and return a pair of speed (x,y) to avoid
         Param: line_position the y line to follow from drone origin """
 
     AVOID_DIST_FRONT = 400  # mm
     AVOID_SPEED_LAT = 0.5 
-    AVOID_SPEED_COME_BACK = forward_speed
-    AVOID_TIME_COME_BACK = 2 # secondes
+    AVOID_SPEED_COME_BACK = lateral_come_back_speed
+    AVOID_TIME_COME_BACK_FRONTAL = 2 # secondes
+    AVOID_TIME_COME_BACK_LATERAL = 1
     AVOID_SPEED_FRONT = 0.6
     FORWARD_SPEED = forward_speed
     # ======= adaptation de la distance latérale ==============
@@ -154,12 +155,16 @@ def obstacle_detection(drone:Drone, line_coord, forward_speed, direction:Directi
             #     time.sleep(1)
             drone.on_track = True
 
-    # ===== Délai avant la déclaration de fin d'obstacle pour revenir sur la ligne de direction
-    if states.obstacle_frontal or states.obstacle_lateral:
-        states.time1 = time.time_ns()
+    # ===== Délai avant la déclaration de fin d'obstacle pour revenir sur la ligne de direction   
+    if states.obstacle_lateral:
+        states.time_since_obstacle = time.time_ns()
         states.obstacle_wait = True
-        # drone.on_track = False
-    if time.time_ns() - states.time1 > AVOID_TIME_COME_BACK*1e9:
+        states.time_choice = AVOID_TIME_COME_BACK_LATERAL
+    if states.obstacle_frontal:
+        states.time_since_obstacle = time.time_ns()
+        states.obstacle_wait = True
+        states.time_choice = AVOID_TIME_COME_BACK_FRONTAL
+    if time.time_ns() - states.time_since_obstacle > states.time_choice*1e9:
         states.obstacle_wait = False
         
     speed_north = FORWARD_SPEED-correction
@@ -182,7 +187,7 @@ def zone_P2_detection(drone:Drone):
 
     arrival = False
 
-    if drone.get_log('stateEstimate.x') >= Arena.START_ZONE_2 + 0.15:
+    if drone.get_log('stateEstimate.x') >= Arena.START_ZONE_2 + 0.25:
         arrival = True
 
     return arrival

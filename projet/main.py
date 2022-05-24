@@ -14,10 +14,10 @@ from drone import Drone
 
 # parties du projet
 from crossing_middle_zone import crossing_middle_zone, states as states_crossing
-from search_platform import search_platform
+from search_platform import search_platform, states as state_search_platform
 from back_home import main_back_home
 from landing_procedure import landing_procedure
-from arena import Arena
+from arena import Arena, Platform
 
 class States(Enum):
     START = -1
@@ -27,7 +27,7 @@ class States(Enum):
     GOING_HOME = 3
     LANDING_P1 = 4
     SEARCHING_PLATFORM_P1 = 5
-    END = 5
+    END = 6
 
 
 if __name__ == '__main__':
@@ -48,6 +48,12 @@ if __name__ == '__main__':
 
         # State machine
         state = States.START
+
+        # state = States.GOING_HOME
+        # drone.take_off(0.2)
+        # time.sleep(1)
+        # drone.position_x_offset = 3.609
+        # drone.position_y_offset = 1.887
 
         while(state is not States.END):
 
@@ -78,7 +84,7 @@ if __name__ == '__main__':
             if state == States.SEARCHING_PLATFORM_P2:
                 # print(" ===== STATE SEARCH PLATFORM =====")
                 # fonction continue
-                edge_detected = search_platform(drone, Arena.WIDTH, Arena.LIM_WEST - drone.get_log('stateEstimate.y'), height=0.2)
+                edge_detected = search_platform(drone, Arena.WIDTH, Platform.SIZE, Arena.LIM_WEST - drone.get_log('stateEstimate.y'), height=0.2)
                 if edge_detected:
                     state = States.LANDING_P2
 
@@ -98,19 +104,27 @@ if __name__ == '__main__':
                 going_home_line = 0
                 arrived_home, on_platform = main_back_home(drone, going_home_line, height=0.2)
                 if arrived_home and on_platform:
+                    print("Landing mode direct")
                     state = States.LANDING_P1
                 if arrived_home and not on_platform:
+                    print("Landing mode mini-search")
                     state = States.SEARCHING_PLATFORM_P1
+                    # reset param from platforme P2
+                    state_search_platform.next_segment = True
+                    state_search_platform.segment = 0
                 
             if state == States.LANDING_P1:
                 # fonction bloquante
+                print("Final landing")
                 landing_procedure(drone, drone.direction, height=0.2)
                 state = States.END
 
             if state == States.SEARCHING_PLATFORM_P1:
                 # fonction continue
-                edge_detected = search_platform(drone, 1, 0.5 ,height=0.2)
+                print("search platforme P1")
+                edge_detected = search_platform(drone, 1.25, 0.23, 0.5 ,height=0.2)
                 if edge_detected:
+                    print("slaut")
                     state = States.LANDING_P1
 
 

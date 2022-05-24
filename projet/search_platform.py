@@ -22,11 +22,11 @@ class states():
     line_coord = 0
 
 
-def search_platform(drone:Drone, dimension_y, position_wall_west, height):
+def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, height):
 
     # distances à parcourir selon l'axe x et l'axe y, comme définit par l'arène
     DISTANCE_Y = dimension_y
-    DISTANCE_X = Platform.SIZE
+    DISTANCE_X = dimension_x
 
     edge_detected = False
     
@@ -84,7 +84,7 @@ def search_platform(drone:Drone, dimension_y, position_wall_west, height):
 
     # Vérifie la distance, la présence d'obstacles et la présence de la plateforme
     distance_detected = distance_detection(drone, states.distance, states.start_position, drone.direction)
-    speed_x, speed_y = obstacle_detection(drone, states.line_coord, forward_speed=0.3, direction=drone.direction)
+    speed_x, speed_y = obstacle_detection(drone, states.line_coord, forward_speed=0.28, lateral_come_back_speed=0.28, direction=drone.direction)
     if drone.on_track:
         edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
     
@@ -148,7 +148,7 @@ def edge_detection(drone:Drone, fly_height, threshold):
     if height > fly_height-0.02:
         drone.zrange = np.append(drone.zrange, height)
         drone.zrange = drone.zrange[1:]
-        print(drone.zrange)
+        # print(drone.zrange)
 
     # Détecte un changement de hauteur selon le threshold = détection de la plateforme
     moy = np.mean(drone.zrange[:-1])

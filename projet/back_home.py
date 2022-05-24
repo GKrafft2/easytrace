@@ -22,21 +22,23 @@ def main_back_home(drone:Drone, going_home_line, height):
     position_estimate = [0, 0]
     arrived = False
     on_platform = False
-    THRESHOLD_LANDING = 0.05
+    THRESHOLD_LANDING_Y = 0.05
+    THRESHOLD_LANDING_X = 0.6
 
     position_estimate[0] = drone.get_log('stateEstimate.x')
     position_estimate[1] = drone.get_log('stateEstimate.y')
     print(f"x = {position_estimate[0]:.3f}  y = {position_estimate[1]:.3f}")
 
-    speed_x, speed_y = obstacle_detection(drone, going_home_line, forward_speed=0.3, direction=Direction.BACKWARD)
+    speed_x, speed_y = obstacle_detection(drone, going_home_line, forward_speed=0.3, lateral_come_back_speed=0.3, direction=Direction.BACKWARD)
     edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
     if position_estimate[0] < Arena.LENGTH/2 and edge_detected:
+        print("edge detection authorized")
         states.edge_detected = True
         arrived = True
         on_platform = True
         drone.stop()
     # si la position en X est validée, stop le drone en X (pourrait avoir évité un obstacle et doit revenir)
-    if position_estimate[0] <= THRESHOLD_LANDING:
+    if position_estimate[0] <= -THRESHOLD_LANDING_X:
         speed_x = 0
         # set la direction du drone pour le landing
         if speed_y > 0:
@@ -47,11 +49,10 @@ def main_back_home(drone:Drone, going_home_line, height):
         drone.direction = Direction.BACKWARD
   
     # si la positionen X et Y est validée
-    if (position_estimate[0] <= THRESHOLD_LANDING) and (abs(position_estimate[1]) <= THRESHOLD_LANDING) and not states.edge_detected:
+    if (position_estimate[0] <= -THRESHOLD_LANDING_X) and (abs(position_estimate[1]) <= THRESHOLD_LANDING_Y) and not states.edge_detected:
         arrived = True
         on_platform = False
-        drone.move_distance(-0.6, 0, 0, 0.2)
-        time.sleep(1)
+        drone.stop()
 
     if not arrived and not on_platform:
         drone.start_linear_motion(speed_x, speed_y, 0)
@@ -68,7 +69,7 @@ def main_back_home_simple(drone:Drone, going_home_line, height):
     position_estimate[1] = drone.get_log('stateEstimate.y')
     print(f"x = {position_estimate[0]:.3f}  y = {position_estimate[1]:.3f}")
 
-    speed_x, speed_y = obstacle_detection(drone, going_home_line, forward_speed=0.3, direction=Direction.BACKWARD)
+    speed_x, speed_y = obstacle_detection(drone, going_home_line, forward_speed=0.3, lateral_come_back_speed=0.3, direction=Direction.BACKWARD)
     edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
     if position_estimate[0] < Arena.LENGTH/2 and edge_detected:
         states.test = True

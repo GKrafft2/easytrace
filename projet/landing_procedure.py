@@ -20,10 +20,10 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         avant de retourner au centre avec un controleur P
     """
     
-    SPEED_FORWARD = 0.3            # vitesse de déplacement vers l'avant
+    SPEED_FORWARD = 0.25            # vitesse de déplacement vers l'avant
     SPEED_LATERAL = 0.1                 # vitesse de déplacement sur les côtés
-    DIST_CENTER_FRONTAL_ATTACK = 0.02   # distance de déplacement du bord vers l'avant avec vitesse 0.2 mettre 0.04
-    DIST_CENTER_LATERAL_ATTACK = 0.2   # distance de déplacement du bord vers la gauche
+    DIST_CENTER_FRONTAL_ATTACK = 0.05   # distance de déplacement du bord vers l'avant avec vitesse 0.2 mettre 0.04
+    DIST_CENTER_LATERAL_ATTACK = 0.22   # distance de déplacement du bord vers la gauche
 
     # Choisi l'orientation du drone pour attérir
     if direction == Direction.FORWARD: # référence
@@ -104,15 +104,15 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
     # time.sleep(0.1)
     # avance un peu au centre de la plateforme
     # drone.stop()
-    drone.move_distance(dist_plateform_x, dist_plateform_y, 0, velocity=0.05) 
+    drone.move_distance(distance_x_m=-dist_plateform_x, distance_y_m=-dist_plateform_y, distance_z_m=0, velocity=0.05) 
     #revient un peu en arrière
     # drone.move_distance(-dist_plateform_x, -dist_plateform_y, 0, velocity=0.05)
     # drone.stop()
     # stabilisation
-    time.sleep(2)
+    time.sleep(0.2)
 
     # cherche le bord 2 de la plateforme
-    if direction == Direction.FORWARD:
+    if direction == Direction.FORWARD or direction == Direction.BACKWARD:
         position_history = drone.get_log('stateEstimate.y')
     elif direction == Direction.LEFT or direction == Direction.RIGHT:
         position_history = drone.get_log('stateEstimate.x')
@@ -123,7 +123,7 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
     while(fly):
         drone.stop_by_hand()
 
-        if direction == Direction.FORWARD:
+        if direction == Direction.FORWARD or direction == Direction.BACKWARD:
             current_position = drone.get_log('stateEstimate.y')
         elif direction == Direction.LEFT or direction == Direction.RIGHT:
             current_position = drone.get_log('stateEstimate.x')
@@ -150,7 +150,7 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         time.sleep(0.1)
     print("stabilisation")
     # stabilisation
-    time.sleep(2)
+    time.sleep(0.2)
 
     # on estime le centre de la box en fonction de là où il detecte un edge
     center_x = drone.get_log('stateEstimate.x') + half_plateform_x
@@ -226,7 +226,7 @@ if __name__ == '__main__':
 
         drone.take_off(0.2)
 
-        landing_procedure(drone, direction=Direction.FORWARD, height=0.2, search_first_edge=True)
+        landing_procedure(drone, direction=Direction.BACKWARD, height=0.2, search_first_edge=True)
        
         drone.stop_logs()
 

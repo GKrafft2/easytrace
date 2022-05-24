@@ -3,7 +3,7 @@ class Platform():
     """ Dimensions [m] de la plateforme de départ et arrivée """
     SIZE = 0.3 # même largeur et profondeur
     HEIGHT = 0.1
-    HALF_BOX = 0.25
+    HALF_BOX = 0.17
 
 class Arena():
     """ Dimension en [m] l'arène """
@@ -16,8 +16,8 @@ class Arena():
     REGION_LENGTH = 1.5
 
     # Position (centre) de la plateforme depuis l'origine
-    ORIGIN_X = 0.4      # DEPUIS LE BAS !!!!
-    ORIGIN_Y = 2      # DEPUIS LA DROITE !!!!
+    ORIGIN_X = 0.85      # DEPUIS LE BAS !!!!
+    ORIGIN_Y = 0.5     # DEPUIS LA DROITE !!!!
 
     # Distance de la zone d'arrivée
     START_ZONE_2 = LENGTH - REGION_LENGTH - ORIGIN_X
