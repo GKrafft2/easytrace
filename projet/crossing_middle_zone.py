@@ -212,12 +212,12 @@ if __name__ == '__main__':
 
         crossed_middle_zone = False
         while(not crossed_middle_zone):
-            drone.update_slam()
+            # drone.update_slam()
             drone.stop_by_hand()
             crossed_middle_zone = crossing_middle_zone(drone, central_line)
             time.sleep(0.1)
 
         drone.land()
-        drone.slam.hold()
+        # drone.slam.hold()
 
         drone.stop_logs(save=False)
