@@ -76,10 +76,10 @@ class Drone(MotionCommander):
         # respondants à logger
         # stateEstimate 'float' [m] (x, y, z, ...)
         # range 'uint16_t' [mm] (up, front, left, ...)
-        self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
-                               'range.front', 'range.back', 'range.left', 'range.right', 'range.up','range.zrange']
-        self._logs_variables_type = ['float', 'float', 'float',
-                                     'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t','uint16_t']
+        self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z', 'stateEstimateZ.vx', 'stateEstimateZ.vy',
+                               'range.front', 'range.back', 'range.left', 'range.right', 'range.up']
+        self._logs_variables_type = ['float', 'float', 'float', 'uint16_t', 'uint16_t', 
+                                     'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t']
 
         # Variables à enregistrer
         self.logconf = LogConfig(name='Stabilizer', period_in_ms=10)
@@ -305,10 +305,11 @@ class Drone(MotionCommander):
             self.land()
             sys.exit()
 
-    def stop_brutal(self):
-        print(f' sx {self.speed_x}, sy {self.speed_y}')
-        self.start_linear_motion(-self.speed_x, -self.speed_y, -self.speed_z)
-        time.sleep(0.4)
+    def stop_brutal(self, time_backward):
+        # print(f' sx {self.speed_x}, sy {self.speed_y}')
+        # self.start_linear_motion(-self.speed_x, -self.speed_y, -self.speed_z)
+        self.start_linear_motion(-float(self.get_log('stateEstimateZ.vx'))/1000, 0, 0) #  -float(self.get_log('stateEstimateZ.vy'))/1000
+        time.sleep(time_backward)
         self.stop()
         time.sleep(0.5)
 

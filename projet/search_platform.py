@@ -20,6 +20,8 @@ class states():
     distance = 0
     start_position = 0
     line_coord = 0
+    speed_lateral = 0
+    speed_forward = 0
 
 
 def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, height):
@@ -27,6 +29,9 @@ def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, h
     # distances à parcourir selon l'axe x et l'axe y, comme définit par l'arène
     DISTANCE_Y = dimension_y
     DISTANCE_X = dimension_x
+    SPEED_FAST = 0.5
+    SPEED_SLOW = 0.2
+    SPEED_LATERAL = 0.5
 
     edge_detected = False
     
@@ -44,6 +49,7 @@ def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, h
             states.distance = position_wall_west                      # Distance rectiligne à parcourir
             states.start_position = position_estimate[1]               # Coordonnée de départ du segment, selon la direction définie
             states.line_coord = position_estimate[0]                   # Coordonnée ("vecteur") de la ligne à suivre
+            states.speed_forward = SPEED_FAST
         # Premier segment, avance en x
         if states.segment == 1:
             print("segment 1")
@@ -51,6 +57,7 @@ def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, h
             states.distance = DISTANCE_X
             states.start_position = states.line_coord # crade
             states.line_coord = position_estimate[1]
+            states.speed_forward = SPEED_SLOW
         # Deuxième segment, avance de l'autre côté de l'arène en y (vers la droite)
         elif states.segment == 2:
             print("segment 2")
@@ -58,6 +65,7 @@ def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, h
             states.start_position = position_estimate[1]
             states.distance = DISTANCE_Y
             states.line_coord = position_estimate[0]
+            states.speed_forward = SPEED_FAST
         # Troisième segment, avance en x
         elif states.segment == 3:
             print("segment 3")
@@ -65,6 +73,7 @@ def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, h
             states.distance = DISTANCE_X
             states.start_position = states.line_coord #crade
             states.line_coord = position_estimate[1]
+            states.speed_forward = SPEED_SLOW
         # Quatrième segment, avance de l'autre côté de l'arène en y (vers la gauche)
         elif states.segment == 4:
             print("segment 4")
@@ -72,6 +81,7 @@ def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, h
             states.start_position = position_estimate[1]
             states.distance = DISTANCE_Y
             states.line_coord = position_estimate[0]
+            states.speed_forward = SPEED_FAST
             
         states.next_segment = False
 
@@ -84,7 +94,7 @@ def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, h
 
     # Vérifie la distance, la présence d'obstacles et la présence de la plateforme
     distance_detected = distance_detection(drone, states.distance, states.start_position, drone.direction)
-    speed_x, speed_y = obstacle_detection(drone, states.line_coord, forward_speed=0.28, lateral_come_back_speed=0.28, direction=drone.direction)
+    speed_x, speed_y = obstacle_detection(drone, states.line_coord, forward_speed=states.speed_forward, lateral_come_back_speed=SPEED_LATERAL, direction=drone.direction)
     if drone.on_track:
         edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
     
@@ -99,7 +109,25 @@ def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, h
         if not edge_detected:
             drone.start_linear_motion(speed_x, speed_y, 0)
         else:
-            drone.stop()  
+            if drone.direction == Direction.FORWARD: # ATTENTION BACKWARD PAS PRIS EN COMPTE
+                Platform.START = drone.get_log('stateEstimate.x')
+                drone.start_linear_motion(0.1, 0, 0)
+            elif drone.direction == Direction.LEFT:
+                Platform.START = drone.get_log('stateEstimate.y')
+                drone.start_linear_motion(0, 0.1, 0)
+            elif drone.direction == Direction.RIGHT:
+                Platform.START = drone.get_log('stateEstimate.y')
+                drone.start_linear_motion(0, -0.1, 0)
+            edge_detected = False
+            while(not edge_detected):
+                time.sleep(0.05)
+                edge_detected = edge_detection(drone, 0.2, drone.TRESHOLD_UP)
+            if drone.direction == Direction.FORWARD or drone.direction == Direction.BACKWARD:
+                Platform.END = drone.get_log('stateEstimate.x')
+            elif drone.direction == Direction.LEFT or drone.direction == Direction.RIGHT:
+                Platform.END = drone.get_log('stateEstimate.y')
+            drone.stop()
+            # drone.stop_brutal()  
         
     return edge_detected
 

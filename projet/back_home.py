@@ -19,17 +19,20 @@ class states():
 
 def main_back_home(drone:Drone, going_home_line, height):
 
+    THRESHOLD_LANDING_Y = 0.05
+    THRESHOLD_LANDING_X = 0.6
+    SPEED_FORWARD = 0.5
+    SPEED_LATERAL = 0.5
+
     position_estimate = [0, 0]
     arrived = False
     on_platform = False
-    THRESHOLD_LANDING_Y = 0.05
-    THRESHOLD_LANDING_X = 0.6
 
     position_estimate[0] = drone.get_log('stateEstimate.x')
     position_estimate[1] = drone.get_log('stateEstimate.y')
     print(f"x = {position_estimate[0]:.3f}  y = {position_estimate[1]:.3f}")
 
-    speed_x, speed_y = obstacle_detection(drone, going_home_line, forward_speed=0.3, lateral_come_back_speed=0.3, direction=Direction.BACKWARD)
+    speed_x, speed_y = obstacle_detection(drone, going_home_line, forward_speed=SPEED_FORWARD, lateral_come_back_speed=SPEED_LATERAL, direction=Direction.BACKWARD)
     edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
     if position_estimate[0] < Arena.LENGTH/2 and edge_detected:
         print("edge detection authorized")

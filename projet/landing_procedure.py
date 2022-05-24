@@ -104,7 +104,12 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
     # time.sleep(0.1)
     # avance un peu au centre de la plateforme
     # drone.stop()
-    drone.move_distance(distance_x_m=-dist_plateform_x, distance_y_m=-dist_plateform_y, distance_z_m=0, velocity=0.05) 
+    if drone.direction == Direction.FORWARD or drone.direction == Direction.BACKWARD:
+        go_to_P(drone, Platform.START + (Platform.END-Platform.START)/2 - 0.09, drone.get_log('stateEstimate.y'))
+    elif drone.direction == Direction.LEFT or drone.direction == Direction.RIGHT:
+        go_to_P(drone, drone.get_log('stateEstimate.x'), Platform.START + (Platform.END-Platform.START)/2 - 0.09)
+    
+    # drone.move_distance(distance_x_m=-dist_plateform_x, distance_y_m=-dist_plateform_y, distance_z_m=0, velocity=0.05) 
     #revient un peu en arrière
     # drone.move_distance(-dist_plateform_x, -dist_plateform_y, 0, velocity=0.05)
     # drone.stop()
@@ -117,6 +122,7 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
     elif direction == Direction.LEFT or direction == Direction.RIGHT:
         position_history = drone.get_log('stateEstimate.x')
     print("cherche edge 2")
+    drone.direction = Direction.BACKWARD
     fly = True
     # si était au bord dès le début et n'a pas pu détecter la platforme, fait demi tour
     U_turn = False
@@ -186,6 +192,7 @@ def go_to_P(drone:Drone, x, y):
         
         position_estimate[0] = drone.get_log('stateEstimate.x') 
         position_estimate[1] = drone.get_log('stateEstimate.y')
+        
 
         # essaye de revenir au centre de la boite
         if error > 0.02 :
@@ -196,7 +203,13 @@ def go_to_P(drone:Drone, x, y):
             landing_speed_x = err_x * landing_speed * P
             landing_speed_y = err_y * landing_speed * P
 
-            drone.start_linear_motion(landing_speed_x,landing_speed_y, 0)
+            print(landing_speed_x)
+            print(landing_speed_y)
+
+            if drone.direction == Direction.LEFT or drone.direction == Direction.RIGHT:
+                drone.start_linear_motion(landing_speed_y, landing_speed_x, 0)
+            if drone.direction == Direction.FORWARD or drone.direction == Direction.BACKWARD:
+                drone.start_linear_motion(landing_speed_x,landing_speed_y, 0)
             error = np.sqrt(err_x**2+err_y**2)
 
         # si l erreur est suffisamment petite on atterit

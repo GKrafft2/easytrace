@@ -23,9 +23,12 @@ class states():
 
 def crossing_middle_zone(drone:Drone, central_line):
 
+        SPEED_FORWARD = 0.4
+        SPEED_LATERAL = 0.4
+
         # Vérifie l'arrivée dans la zone de la seconde plateforme et la présence d'obstacles
         arrival = zone_P2_detection(drone)
-        speed_x, speed_y = obstacle_detection(drone, central_line, forward_speed=0.3, lateral_come_back_speed=0.3, direction=Direction.FORWARD)
+        speed_x, speed_y = obstacle_detection(drone, central_line, forward_speed=SPEED_FORWARD, lateral_come_back_speed=SPEED_LATERAL, direction=Direction.FORWARD)
             
         if not arrival: 
             drone.start_linear_motion(speed_x, speed_y, 0)            
@@ -39,19 +42,18 @@ def obstacle_detection(drone:Drone, line_coord, forward_speed, lateral_come_back
     AVOID_DIST_FRONT = 400  # mm
     AVOID_SPEED_LAT = 0.5 
     AVOID_SPEED_COME_BACK = lateral_come_back_speed
-    AVOID_TIME_COME_BACK_FRONTAL = 2 # secondes
-    AVOID_TIME_COME_BACK_LATERAL = 1
+    AVOID_TIME_COME_BACK_FRONTAL = 1 # secondes
+    AVOID_TIME_COME_BACK_LATERAL = 0.4
     AVOID_SPEED_FRONT = 0.6
     FORWARD_SPEED = forward_speed
+    POSITION_DIRECTION_THRESH = 0.20        # Threshold pour le maintien de la ligne de suivi sans oscillations
     # ======= adaptation de la distance latérale ==============
     # si le drone est sur la bonne trajectoire, il sera moins sensible que s'il revient en position
     if drone.on_track:
         AVOID_DIST_LAT = 50
     else:
         AVOID_DIST_LAT = 160
-
-    # Threshold pour le maintien de la ligne de suivi sans oscillations
-    POSITION_DIRECTION_THRESH = 0.05
+    
 
     # cree un array pour mettre les 5 variables de sensor
     # range [front,back,left,right,up]
@@ -150,7 +152,7 @@ def obstacle_detection(drone:Drone, line_coord, forward_speed, lateral_come_back
             speed_east =  LEFT * AVOID_SPEED_COME_BACK
             drone.on_track = False
         else:
-            speed_east = 0
+            speed_east = PD(drone, line_coord, speed_east)
             # if not drone.on_track:
             #     time.sleep(1)
             drone.on_track = True
@@ -192,6 +194,28 @@ def zone_P2_detection(drone:Drone):
 
     return arrival
 
+def PD(drone:Drone, position_command, speed):
+
+    KP = 1
+    KD = 0
+
+    if drone.direction == Direction.FORWARD:
+        error = position_command - drone.get_log('stateEstimate.y')
+        # speed = drone.get_log('stateEstimateZ.vy')
+    elif drone.direction == Direction.BACKWARD:
+        error = -(position_command - drone.get_log('stateEstimate.y'))
+        # speed = drone.get_log('stateEstimateZ.vy')
+    elif drone.direction == Direction.LEFT:
+        error = position_command - drone.get_log('stateEstimate.x')
+        # speed = drone.get_log('stateEstimateZ.vx')
+    elif drone.direction == Direction.RIGHT:
+        error = -(position_command - drone.get_log('stateEstimate.x'))
+        # speed = drone.get_log('stateEstimateZ.vx')
+
+    # out_speed = KP * error + KD * speed
+    out_speed = speed * error
+
+    return out_speed
 
 if __name__ == '__main__':
     # initalise les drivers low level, obligatoire

@@ -71,34 +71,36 @@ if __name__ == '__main__':
                 else:
                     states_crossing.default_direction = -1  # droite
                 state = States.CROSSING_MIDDLE_ZONE
+                print(" ===== STATE CROSSING =====")
 
             if state == States.CROSSING_MIDDLE_ZONE:
-                # print(" ===== STATE CROSSING =====")
+                
                 # fonction continue
                 crossed_middle_zone = crossing_middle_zone(drone, central_line)
                 if crossed_middle_zone:
                     state = States.SEARCHING_PLATFORM_P2
                     edge_detected = False
                     # time.sleep(2)
+                    print(" ===== STATE SEARCH PLATFORM =====")
 
             if state == States.SEARCHING_PLATFORM_P2:
-                # print(" ===== STATE SEARCH PLATFORM =====")
+                
                 # fonction continue
                 edge_detected = search_platform(drone, Arena.WIDTH, Platform.SIZE, Arena.LIM_WEST - drone.get_log('stateEstimate.y'), height=0.2)
                 if edge_detected:
                     state = States.LANDING_P2
-
+                    print(" ===== STATE LANDING P2 =====")
             if state == States.LANDING_P2:
-                # print(" ===== STATE LANDING P2 =====")
+                
                 # drone.stop()
                 # fonction bloquante
                 landing_procedure(drone, drone.direction, height=0.2)
                 drone.slam.save_img()
                 state = States.GOING_HOME
                 drone.take_off()
+                print(" ===== STATE GOING HOME =====")
 
             if state == States.GOING_HOME:
-                # print(" ===== STATE GOING HOME =====")
 
                 # fonction continue
                 going_home_line = 0

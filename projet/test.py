@@ -14,6 +14,8 @@ from drone import Drone
 
 # parties du projet
 from crossing_middle_zone import crossing_middle_zone, states as states_crossing
+from landing_procedure import go_to_P
+from search_platform import edge_detection
 from search_platform import search_platform, distance_detection
 from back_home import main_back_home
 from landing_procedure import landing_procedure
@@ -37,7 +39,27 @@ if __name__ == '__main__':
         start_time = time.perf_counter()
         
         drone.take_off()
-        drone.move_distance(distance_x_m=-0.6, distance_y_m=0, distance_z_m=0, velocity=0.2)
+        drone.start_linear_motion(0.5, 0, 0)
+        edge_detected = False
+        while(not edge_detected):
+            time.sleep(0.1)
+            edge_detected = edge_detection(drone, 0.2, drone.TRESHOLD_UP)
+        position_start = drone.get_log('stateEstimate.x')
+        # time.sleep(2)
+        # drone.stop_brutal(2.2)
+        # time.sleep(1)
+        drone.start_linear_motion(0.1, 0, 0)
+        edge_detected = False
+        while(not edge_detected):
+            time.sleep(0.1)
+            edge_detected = edge_detection(drone, 0.2, drone.TRESHOLD_UP)
+        position_end = drone.get_log('stateEstimate.x')
+        drone.start_linear_motion(0.2, 0, 0)
+        time.sleep(1)
+        drone.stop()
+        go_to_P(drone, position_start + (position_end-position_start)/2 - 0.09, 0)
+
+        # time.sleep(1)
 
         drone.land()
         # reached = False

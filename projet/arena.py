@@ -4,6 +4,10 @@ class Platform():
     SIZE = 0.3 # même largeur et profondeur
     HEIGHT = 0.1
     HALF_BOX = 0.17
+    START = 0
+    END = 0
+    # LATERAL_START = 0
+    # LATERAL
 
 class Arena():
     """ Dimension en [m] l'arène """
