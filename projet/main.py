@@ -37,7 +37,7 @@ if __name__ == '__main__':
     cflib.crtp.init_drivers()
     # identifiant radio du drone
     URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E702')
-
+    offset = Arena.ORIGIN_Y
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
 
         # crée un drone (hérite de motion commander)
@@ -66,6 +66,7 @@ if __name__ == '__main__':
                 drone.take_off()
                 #le drone suit la ligne au centre de l'arène
                 central_line = 0
+                #central_line = -(Arena.ORIGIN_Y - offset)
                 # update de la direction par défault s'il y a un obstacle
                 state = States.CROSSING_MIDDLE_ZONE
 
