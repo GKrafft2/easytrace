@@ -43,13 +43,13 @@ def obstacle_detection(drone:Drone, line_coord, forward_speed, lateral_come_back
     AVOID_SPEED_LAT = 0.5 
     AVOID_SPEED_COME_BACK = lateral_come_back_speed
     AVOID_TIME_COME_BACK_FRONTAL = 2 # secondes
-    AVOID_TIME_COME_BACK_LATERAL = 1
+    AVOID_TIME_COME_BACK_LATERAL = 0.7
     AVOID_SPEED_FRONT = 0.6
     FORWARD_SPEED = forward_speed
     # ======= adaptation de la distance latérale ==============
     # si le drone est sur la bonne trajectoire, il sera moins sensible que s'il revient en position
     if drone.on_track:
-        AVOID_DIST_LAT = 50
+        AVOID_DIST_LAT = 65
     else:
         AVOID_DIST_LAT = 160
 
