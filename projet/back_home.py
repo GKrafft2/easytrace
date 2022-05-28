@@ -1,6 +1,4 @@
-
 import time
-import numpy as np
 
 # Libraries crazyflie
 import cflib.crtp
@@ -8,7 +6,7 @@ from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.utils import uri_helper
 
-# Libraries personnelles
+# Personal Libraries
 from drone import Drone
 from arena import Arena, Direction
 from crossing_middle_zone import obstacle_detection
@@ -18,7 +16,9 @@ class states():
     edge_detected = False
 
 def main_back_home(drone:Drone, going_home_line, height):
-
+    """
+    Function to go from back zone to front zone
+    """
     SPEED_FORWARD = 0.3
     SPEED_LATERAL = 0.3
     
@@ -40,10 +40,10 @@ def main_back_home(drone:Drone, going_home_line, height):
         arrived = True
         on_platform = True
         drone.stop()
-    # si la position en X est validée, stop le drone en X (pourrait avoir évité un obstacle et doit revenir)
+    # if the position in X is validated, stop the drone in X (could have avoided an obstacle and must return)
     if position_estimate[0] <= -THRESHOLD_LANDING_X:
         speed_x = 0
-        # set la direction du drone pour le landing
+        # set the direction of the drone for the landing
         if speed_y > 0:
             drone.direction = Direction.LEFT
         else:
@@ -51,7 +51,7 @@ def main_back_home(drone:Drone, going_home_line, height):
     else:
         drone.direction = Direction.BACKWARD
   
-    # si la positionen X et Y est validée
+    # if the position in X and Y is validated
     if (position_estimate[0] <= -THRESHOLD_LANDING_X) and (abs(position_estimate[1]) <= THRESHOLD_LANDING_Y) and not states.edge_detected:
         arrived = True
         on_platform = False
@@ -62,32 +62,7 @@ def main_back_home(drone:Drone, going_home_line, height):
         
     return arrived, on_platform
 
-def main_back_home_simple(drone:Drone, going_home_line, height):
 
-    position_estimate = [0, 0]
-    arrived = False
-    THRESHOLD_LANDING = 0.05
-
-    position_estimate[0] = drone.get_log('stateEstimate.x')
-    position_estimate[1] = drone.get_log('stateEstimate.y')
-    print(f"x = {position_estimate[0]:.3f}  y = {position_estimate[1]:.3f}")
-
-    speed_x, speed_y = obstacle_detection(drone, going_home_line, forward_speed=0.3, lateral_come_back_speed=0.3, direction=Direction.BACKWARD)
-    edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
-    if position_estimate[0] < Arena.LENGTH/2 and edge_detected:
-        states.test = True
-    # si la position en X est validée, stop le drone en X (pourrait avoir évité un obstacle et doit revenir)
-    if position_estimate[0] <= THRESHOLD_LANDING:
-        speed_x = 0
-    # si la positionen X et Y est validée
-    if (position_estimate[0] <= THRESHOLD_LANDING) and (abs(position_estimate[1]) <= THRESHOLD_LANDING):
-        arrived = True
-    if not arrived:
-        drone.start_linear_motion(speed_x, speed_y, 0)
-        
-    return arrived
-
-    # pass
 if __name__ == '__main__':
     # initalise les drivers low level, obligatoire
     cflib.crtp.init_drivers()
