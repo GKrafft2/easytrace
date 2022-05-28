@@ -187,7 +187,7 @@ def go_to_P(drone:Drone, x, y):
         position_estimate[1] = drone.get_log('stateEstimate.y')
 
         # essaye de revenir au centre de la boite
-        if error > 0.02 :
+        if error > 0.03 :
             landing_speed = -0.1
             P = 5.5
             err_x = (position_estimate[0]-x)

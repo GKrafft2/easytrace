@@ -21,11 +21,27 @@ class states():
     time_since_obstacle = 0    # temps depuis le dernier obstacle vu
     time_choice = 0            # le temps diffère selon l'obstacle est frontal ou latéral
 
+def go_to_middle(drone:Drone, central_line, pos_y):
+
+        SPEED_FORWARD = 0.3
+        SPEED_LATERAL = 0.3
+        if pos_y > 0:
+            direction = Direction.RIGHT
+        else:
+            direction = Direction.LEFT
+        # Vérifie l'arrivée dans la zone de la seconde plateforme et la présence d'obstacles
+        arrival = aligned_plateform(drone)
+        speed_x, speed_y = obstacle_detection(drone, central_line, forward_speed=SPEED_FORWARD, lateral_come_back_speed=SPEED_LATERAL, direction=direction)
+            
+        if not arrival: 
+            drone.start_linear_motion(speed_x, speed_y, 0)            
+
+        return arrival
+
 def crossing_middle_zone(drone:Drone, central_line):
 
         SPEED_FORWARD = 0.3
         SPEED_LATERAL = 0.3
-
         # Vérifie l'arrivée dans la zone de la seconde plateforme et la présence d'obstacles
         arrival = zone_P2_detection(drone)
         speed_x, speed_y = obstacle_detection(drone, central_line, forward_speed=SPEED_FORWARD, lateral_come_back_speed=SPEED_LATERAL, direction=Direction.FORWARD)
@@ -49,7 +65,7 @@ def obstacle_detection(drone:Drone, line_coord, forward_speed, lateral_come_back
     # ======= adaptation de la distance latérale ==============
     # si le drone est sur la bonne trajectoire, il sera moins sensible que s'il revient en position
     if drone.on_track:
-        AVOID_DIST_LAT = 65
+        AVOID_DIST_LAT = 75
     else:
         AVOID_DIST_LAT = 160
 
@@ -184,6 +200,13 @@ def obstacle_detection(drone:Drone, line_coord, forward_speed, lateral_come_back
     
     return speed_x, speed_y
 
+def aligned_plateform(drone:Drone):
+    arrival = False
+
+    if drone.get_log('stateEstimate.y') < 0+0.25 and drone.get_log('stateEstimate.y') > 0-0.25:
+        arrival = True
+
+    return arrival
 
 def zone_P2_detection(drone:Drone):
     """ vérifie quand le drone arrive dans la zone de la plateforme d'arrivée """

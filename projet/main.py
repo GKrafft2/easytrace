@@ -13,7 +13,7 @@ from cflib.utils import uri_helper
 from drone import Drone
 
 # parties du projet
-from crossing_middle_zone import crossing_middle_zone, states as states_crossing
+from crossing_middle_zone import crossing_middle_zone,go_to_middle, states as states_crossing
 from search_platform import search_platform, states as state_search_platform
 from back_home import main_back_home
 from landing_procedure import landing_procedure
@@ -24,10 +24,11 @@ class States(Enum):
     CROSSING_MIDDLE_ZONE = 0
     SEARCHING_PLATFORM_P2 = 1
     LANDING_P2 = 2
-    GOING_HOME = 3
-    LANDING_P1 = 4
-    SEARCHING_PLATFORM_P1 = 5
-    END = 6
+    TACK_OFF_ALIGN = 3
+    GOING_HOME = 4
+    LANDING_P1 = 5
+    SEARCHING_PLATFORM_P1 = 6
+    END = 7
 
 
 if __name__ == '__main__':
@@ -64,12 +65,8 @@ if __name__ == '__main__':
                 # print(" ===== STATE START =====")
                 drone.take_off()
                 #le drone suit la ligne au centre de l'arène
-                central_line = - (Arena.ORIGIN_Y - Arena.WIDTH/2)
+                central_line = 0
                 # update de la direction par défault s'il y a un obstacle
-                if central_line > 0:
-                    states_crossing.default_direction = 1   # gauche
-                else:
-                    states_crossing.default_direction = -1  # droite
                 state = States.CROSSING_MIDDLE_ZONE
 
             if state == States.CROSSING_MIDDLE_ZONE:
@@ -94,13 +91,24 @@ if __name__ == '__main__':
                 # fonction bloquante
                 landing_procedure(drone, drone.direction, height=0.2)
                 drone.slam.save_img()
-                state = States.GOING_HOME
+                state = States.TACK_OFF_ALIGN
                 drone.take_off()
+
+            if state == States.TACK_OFF_ALIGN:
+                # print(" ===== STATE CROSSING =====")
+                # fonction continue
+                print('state tack_off_align')
+                crossed_middle_zone = go_to_middle(drone, drone.get_log('stateEstimate.x'),drone.get_log('stateEstimate.y'))
+
+                if crossed_middle_zone:
+                    state = States.GOING_HOME
+                    # time.sleep(2)
 
             if state == States.GOING_HOME:
                 # print(" ===== STATE GOING HOME =====")
 
                 # fonction continue
+                print('state going home')
                 going_home_line = 0
                 arrived_home, on_platform = main_back_home(drone, going_home_line, height=0.2)
                 if arrived_home and on_platform:
