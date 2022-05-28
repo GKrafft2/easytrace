@@ -27,6 +27,8 @@ def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, h
     # distances à parcourir selon l'axe x et l'axe y, comme définit par l'arène
     DISTANCE_Y = dimension_y
     DISTANCE_X = dimension_x
+    SPEED_FORWARD = 0.3
+    SPEED_LATERAL = 0.3
 
     edge_detected = False
     
@@ -84,7 +86,7 @@ def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, h
 
     # Vérifie la distance, la présence d'obstacles et la présence de la plateforme
     distance_detected = distance_detection(drone, states.distance, states.start_position, drone.direction)
-    speed_x, speed_y = obstacle_detection(drone, states.line_coord, forward_speed=0.28, lateral_come_back_speed=0.28, direction=drone.direction)
+    speed_x, speed_y = obstacle_detection(drone, states.line_coord, forward_speed=SPEED_FORWARD, lateral_come_back_speed=SPEED_LATERAL, direction=drone.direction)
     if drone.on_track:
         edge_detected = edge_detection(drone, fly_height=height, threshold=drone.TRESHOLD_UP)
     

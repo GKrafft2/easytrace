@@ -23,9 +23,12 @@ class states():
 
 def crossing_middle_zone(drone:Drone, central_line):
 
+        SPEED_FORWARD = 0.3
+        SPEED_LATERAL = 0.3
+
         # Vérifie l'arrivée dans la zone de la seconde plateforme et la présence d'obstacles
         arrival = zone_P2_detection(drone)
-        speed_x, speed_y = obstacle_detection(drone, central_line, forward_speed=0.3, lateral_come_back_speed=0.3, direction=Direction.FORWARD)
+        speed_x, speed_y = obstacle_detection(drone, central_line, forward_speed=SPEED_FORWARD, lateral_come_back_speed=SPEED_LATERAL, direction=Direction.FORWARD)
             
         if not arrival: 
             drone.start_linear_motion(speed_x, speed_y, 0)            

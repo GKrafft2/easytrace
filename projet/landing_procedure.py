@@ -19,8 +19,7 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         Cherche la première arête, puis se déplace vers la droite pour chercher la seconde arrête
         avant de retourner au centre avec un controleur P
     """
-    
-    SPEED_FORWARD = 0.25            # vitesse de déplacement vers l'avant
+    SPEED_FORWARD = 0.25                # vitesse de déplacement vers l'avant
     SPEED_LATERAL = 0.1                 # vitesse de déplacement sur les côtés
     DIST_CENTER_FRONTAL_ATTACK = 0.05   # distance de déplacement du bord vers l'avant avec vitesse 0.2 mettre 0.04
     DIST_CENTER_LATERAL_ATTACK = 0.22   # distance de déplacement du bord vers la gauche
