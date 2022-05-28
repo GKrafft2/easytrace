@@ -42,19 +42,15 @@ class Slam():
             # obstcale mapping
             if self.position_estimate[0] + self.range_sensors[0] < self.map.shape[0]:
                 if self.range_sensors[0] < self.thresh_obstcl:
-                    #self.map[int(self.position_estimate[0] + self.range_sensors[0])][int(self.position_estimate[1])] = self.red
                     self.draw9(int(self.position_estimate[0] + self.range_sensors[0]),int(self.position_estimate[1]),self.red)  # front
             if self.position_estimate[0] - self.range_sensors[1] > 0:
                 if self.range_sensors[1] < self.thresh_obstcl:
-                    #self.map[int(self.position_estimate[0] - self.range_sensors[1])][int(self.position_estimate[1])] = self.red  
                     self.draw9(int(self.position_estimate[0] - self.range_sensors[1]),int(self.position_estimate[1]),self.red) # back
             if self.position_estimate[1] + self.range_sensors[2] < self.map.shape[1]:
                 if self.range_sensors[2] < self.thresh_obstcl:
-                    #self.map[int(self.position_estimate[0])][int(self.position_estimate[1] + self.range_sensors[2])] = self.red  
                     self.draw9(int(self.position_estimate[0]),int(self.position_estimate[1] + self.range_sensors[2]),self.red)# left
             if self.position_estimate[1] - self.range_sensors[3] > 0:
                 if self.range_sensors[3] < self.thresh_obstcl:
-                    #self.map[int(self.position_estimate[0])][int(self.position_estimate[1] - self.range_sensors[3])] = self.red  
                     self.draw9(int(self.position_estimate[0]),int(self.position_estimate[1] - self.range_sensors[3]),self.red) #right
 
         # update the map
@@ -72,50 +68,18 @@ class Slam():
         cv2.waitKey(1)
 
     def save_img(self):
-        # image_path = r'C:\Users\hirtt\Documents\GitHub\easytrace\projet\images'
         cv2.imwrite("slam.jpg", self.map)
-
-# def fly_while_slam_class(drone:Drone, slam:Slam):
-#     range_sensors = np.empty(5)
-#     position_estimate = np.empty(2)
-#     for i in range(3000):
-#
-#         range_sensors[0] = drone.get_log('range.front')
-#         range_sensors[1] = drone.get_log('range.back')
-#         range_sensors[2] = drone.get_log('range.left')
-#         range_sensors[3] = drone.get_log('range.right')
-#         range_sensors[4] = drone.get_log('range.up')
-#
-#         position_estimate[0] = drone.get_log('stateEstimate.x')
-#         position_estimate[1] = drone.get_log('stateEstimate.y')
-#
-#         slam.update(range_sensors, position_estimate)
-#
-#         # L shaped path for testing
-#         if i <= 1000 :
-#             drone.start_linear_motion(0.2, 0, 0)
-#         elif i > 1000 and i <= 1500 :
-#             drone.start_linear_motion(0, 0.2, 0)
-#         elif i > 1500 and i <= 2000 :
-#             drone.start_linear_motion(0, -0.2, 0)
-#         else :
-#             drone.start_linear_motion(-0.2, 0, 0)
-#
-#     drone.land()
-#     # le drone se pose et l affichage du SLAM reste actif
-#     slam.hold()
-
 
 
 if __name__ == '__main__':
-    # initalise les drivers low level, obligatoire
+    # initialize the low level drivers, mandatory
     cflib.crtp.init_drivers()
-    # identifiant radio du drone
+    # drone radio identifier
     URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E702')
     from drone import Drone
 
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
-        # crée un drone (hérite de motion commander)
+        # creates a drone (inherits from motion commander)
 
         drone = Drone(scf, default_height=0.2)
         slam = Slam()
@@ -124,10 +88,5 @@ if __name__ == '__main__':
 
         drone.take_off()
 
-        #fly_while_slam(drone)                  #without the slam class
-        # fly_while_slam_class(drone, slam)     # with the slam class
-
         print("land")
         drone.land()
-
-        # drone.stop_logs(save=False)
