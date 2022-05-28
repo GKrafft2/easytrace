@@ -163,8 +163,13 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
     time.sleep(0.2)
 
     # on estime le centre de la box en fonction de là où il detecte un edge
-    center_x = drone.get_log('stateEstimate.x') + half_plateform_x
-    center_y = drone.get_log('stateEstimate.y') + half_plateform_y
+    if direction == Direction.FORWARD or direction == Direction.BACKWARD:
+        center_x = drone.get_log('stateEstimate.x') + half_plateform_x
+        center_y = (Platform.END-Platform.START)/2 + Platform.START
+    elif direction == Direction.LEFT or direction == Direction.RIGHT:
+        center_x = (Platform.END-Platform.START)/2 + Platform.START
+        center_y = drone.get_log('stateEstimate.x') + half_plateform_x
+    
     print("go to P")
     go_to_P(drone, center_x, center_y)
 

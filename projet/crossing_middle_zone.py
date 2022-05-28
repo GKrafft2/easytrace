@@ -39,7 +39,7 @@ def obstacle_detection(drone:Drone, line_coord, forward_speed, lateral_come_back
     """ detect obstacle and return a pair of speed (x,y) to avoid
         Param: line_position the y line to follow from drone origin """
 
-    AVOID_DIST_FRONT = 400  # mm
+    AVOID_DIST_FRONT = 450  # mm
     AVOID_SPEED_LAT = 0.5 
     AVOID_SPEED_COME_BACK = lateral_come_back_speed
     AVOID_TIME_COME_BACK_FRONTAL = 1 # secondes
