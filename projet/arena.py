@@ -1,28 +1,28 @@
 
 class Platform():
-    """ Dimensions [m] de la plateforme de départ et arrivée """
-    SIZE = 0.3 # même largeur et profondeur
+    """ Start and goal platform dimensions [m] """
+    SIZE = 0.3 # width
     HEIGHT = 0.1
     HALF_BOX = 0.17
 
 class Arena():
-    """ Dimension en [m] l'arène """
+    """ Arena dimension [m] """
     
-    # Dimension absolue, origine bas droite
+    # absolute dimention, origin down right
     WIDTH = 3
     LENGTH = 5
 
     # Landing and starting region
     REGION_LENGTH = 1.5
 
-    # Position (centre) de la plateforme depuis l'origine
-    ORIGIN_X = 0.85      # DEPUIS LE BAS !!!!
-    ORIGIN_Y = 0.5     # DEPUIS LA DROITE !!!!
+    # Position (centre) of the plateforme from the origine
+    ORIGIN_X = 0.85      # from the "bottum"
+    ORIGIN_Y = 0.5     # from the right
 
-    # Distance de la zone d'arrivée
+    # Distance of the drone to the landing region
     START_ZONE_2 = LENGTH - REGION_LENGTH - ORIGIN_X
 
-    # Limites de l'arène [m], à partir de la plateforme
+    # Arena limits [m], from the start platform
     LIM_EAST = - ORIGIN_Y
     LIM_WEST = WIDTH - ORIGIN_Y
     LIM_SOUTH = - ORIGIN_X

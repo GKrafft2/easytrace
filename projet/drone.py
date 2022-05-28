@@ -1,6 +1,5 @@
-""" Classe drone qui hérite de MotionCommander """
+""" Drone classe which inherite of MotionCommander """
 
-from email.policy import default
 import logging
 import os
 import time
@@ -27,7 +26,7 @@ logging.basicConfig(level=logging.ERROR)
 class Drone(MotionCommander):
     def __init__(self, scf, default_height):
 
-        # Initialise le MotionCommander
+        # Initialisation of MotionCommander
         super().__init__(scf, default_height=default_height)
 
         # Crazyflie instance
@@ -44,7 +43,7 @@ class Drone(MotionCommander):
         self._cf.param.add_update_callback(group='deck', name='bcFlow2', cb=self._param_deck_flow)
         time.sleep(1)
 
-        # Variables de commandes ()
+        # commande variables ()
         self.height_cmd = default_height
         self.position_x_offset = 0
         self.position_y_offset = 0
@@ -53,27 +52,24 @@ class Drone(MotionCommander):
         self.speed_y = 0
         self.speed_z = 0
 
-        # Variables d'état
-        # self.x = 0
-        # self.y = 0
+        # State variables
         self.z_cmd = 0
         self.direction = Direction.FORWARD
         self.TRESHOLD_UP = 0.03
         self.THRESHOLD_DOWN = 0.03
 
-        # sensor variables
+        # Sensor variables
         self.range_sensors = np.empty(5)
         self.position_estimate = np.empty(2)
 
-        # Historique de position (pour le edge detection)
+        # Position history of the position (for edge detection)
         self.zrange = np.zeros(5)
     
-        # si actuellement sur la ligne de suivi
+        # if the drone is on the tracking line
         self.on_track = True           
 
 
-        # Variables et types cor
-        # respondants à logger
+        # Variables and corespondant type to log
         # stateEstimate 'float' [m] (x, y, z, ...)
         # range 'uint16_t' [mm] (up, front, left, ...)
         self.logs_variables = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
@@ -81,15 +77,15 @@ class Drone(MotionCommander):
         self._logs_variables_type = ['float', 'float', 'float',
                                      'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t', 'uint16_t','uint16_t']
 
-        # Variables à enregistrer
+        # Variables to save
         self.logconf = LogConfig(name='Stabilizer', period_in_ms=10)
         for variable, type in zip(self.logs_variables, self._logs_variables_type):
             self.logconf.add_variable(variable, type)
 
-        # Matrice des logs, s'adapte en fonction du nombre de variables ajoutées
+        # Logs matrix, adapt in fonction of the variables number added
         self.logs_size = 100000
         self.logs = np.zeros([self.logs_size, len(self.logconf.variables)])
-        # Indique la position du dernier log
+        # Show the position of the last log
         self.count = 0 
 
         try:
@@ -112,13 +108,12 @@ class Drone(MotionCommander):
         """Callback when the Crazyflie is disconnected (called in all cases)"""
         print('Disconnected from %s' % link_uri)
 
-        # sauvegarde les logs s'il y en a
+        # save the logs if there is one
         if self.count != 0:
             self.save_logs()
 
     def _stab_log_data(self, timestamp, data, logconf):
         """ Callback from the log API when data arrives """
-        # print('[%d][%s]: %s' % (timestamp, logconf.name, data))
 
         # Save info into log variable
         for idx, i in enumerate(list(data)):
@@ -126,7 +121,7 @@ class Drone(MotionCommander):
 
         self.count += 1
 
-        # Soulève une erreur si on atteinds la fin de la matrice
+        # Show an error if the end of the matrix is reached
         if self.count == self.logs_size:
             raise Exception('Log matrix is full')
 
@@ -150,21 +145,19 @@ class Drone(MotionCommander):
 
     def get_log(self, variable, index=None, array=False):
         """ 
-        Si index est donné, retourne le log correspondant
-        Si array est vrai, retourne une liste des derniers indexs
-        Autrement retourne le dernier logs enregistré de l'index de variable donné """
+        If index is given, returns the corresponding log
+        If array is true, returns a list of the last indexes
+        Otherwise returns the last recorded log of the given variable index """
 
-        # retourne l'index de la variable de log
+        # return the index of the log variable
         idx_variable = self.logs_variables.index(variable)
 
         if index is None :
             data = self.logs[self.count-1,idx_variable]
-        # elif index is not None and array == True:
-        #     data =  self.logs[self.count-index:self.count,idx_variable]
         else: # index is not None and array == False:
             data = self.logs[self.count-index,idx_variable]
         
-        # offset pour garder la position après atterissage
+        # offset to keep the position after landing
         if variable == 'stateEstimate.x':
             data += self.position_x_offset
         if variable == 'stateEstimate.y':
@@ -173,11 +166,11 @@ class Drone(MotionCommander):
         return data
 
     def start_logs(self):
-        """ Start l'enregistrement des logs """
+        """ Start the logs saving """
         self.logconf.start()
     
     def stop_logs(self, save=True):
-        """ Stop les logs. Enregistre automatiquement en CSV et reset la matrice des logs """
+        """ Stop the logs. Save automatically in CSV and restet the logs matrix """
         self.logconf.stop()
         if save:
             self.save_logs()
@@ -185,7 +178,7 @@ class Drone(MotionCommander):
             self.count = 0
 
     def save_logs(self):
-        """ Enregistre la matrice des logs en fichiers CSV"""
+        """ Save the logs matrix in CSV files """
         # Get timestamp
         filename = dt.datetime.now().strftime("%Y_%m_%d_%H_%M_%S.csv")
         # Save log to file
@@ -197,8 +190,6 @@ class Drone(MotionCommander):
 
     # ###############################################
     # ============= STATES FUNCTIONS ================
-    # def update_states(self):
-    #     self.z_cmd = self.get_log('stateEstimate.z')
     def __save_position_landing(self):
         self.position_x_offset = self.get_log('stateEstimate.x')
         self.position_y_offset = self.get_log('stateEstimate.y')
@@ -226,8 +217,7 @@ class Drone(MotionCommander):
     # ###############################################
     # ============ MOVEMENTS FUNCTIONS ==============
     def go_to(self, x=None, y=None, z=None, velocity=0.2):
-        """ Déplacement en à une position absolue
-            TODO:ajouter un PID si précision nécessaire
+        """ Movement to an absolute position
         """
         
         if x is None:
@@ -249,7 +239,7 @@ class Drone(MotionCommander):
         self.move_distance(x, y, z, velocity)
 
     def __go_to_limits_check(self, x=0, y=0, z=0):
-        """ Vérifie que l'emplacement désiré est autorisé et modifie le cas échéant"""
+        """  check if the disired position is allowed and modified it if not """
         xp, yp, zp = x, y, z
 
         if x > Arena.LIM_NORTH:
@@ -270,35 +260,6 @@ class Drone(MotionCommander):
 
         return x, y, z
 
-    def limits_check(self):
-        
-        outside_limits = False
-
-        """ Vérifie que l'emplacement désiré est autorisé et modifie le cas échéant"""
-
-        x = self.get_log('stateEstimate.x')
-        y = self.get_log('stateEstimate.y')
-        z = self.get_log('stateEstimate.z')
-
-        if x > Arena.LIM_NORTH or x < Arena.LIM_SOUTH:
-            speed_x = 0
-            outside_limits = True
-            print("outside x")
-        if y > Arena.LIM_WEST or y < Arena.LIM_EAST:
-            speed_y = 0
-            outside_limits = True
-            print("outside y")
-        if z > Arena.LIM_UP or z < Arena.LIM_DOWN:
-            speed_z = 0
-            outside_limits = True
-            print("outside z")
-
-        # pour le moment arrête le drone
-        if outside_limits:
-            self.start_linear_motion(0, 0, 0)
-
-        return outside_limits
-
     def stop_by_hand(self):
         if self.get_log('range.up') < 200:
             self.stop()
@@ -312,7 +273,7 @@ class Drone(MotionCommander):
         self.stop()
         time.sleep(0.5)
 
-    # surcharge de Motion Commander
+    # redefinition of Motion Commander
     def take_off(self, height=None):
         # execute Motion Commander method
         super(Drone, self).take_off(height=height)
@@ -321,7 +282,7 @@ class Drone(MotionCommander):
         # wait for the drone to stabilize
         time.sleep(2)
 
-    # surcharge de Motion Commander
+    # redefinition of Motion Commander
     def land(self, velocity=0.2):
         """ Vitesse de 1 = chute libre """
         # wait for the drone to stabilize
