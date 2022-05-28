@@ -33,7 +33,8 @@ class States(Enum):
 
 if __name__ == '__main__':
 
-    # initialize low level drivers, mandatory    cflib.crtp.init_drivers()
+    # initialize low level drivers, mandatory    
+    cflib.crtp.init_drivers()
     # drone radio identifier
     URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E702')
     offset = Arena.ORIGIN_Y
