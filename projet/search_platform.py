@@ -26,12 +26,12 @@ class states():
 
 def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, height):
 
+    SPEED_FAST = 0.4
+    SPEED_SLOW = 0.2
+    SPEED_LATERAL = 0.5 
     # distances à parcourir selon l'axe x et l'axe y, comme définit par l'arène
     DISTANCE_Y = dimension_y
     DISTANCE_X = dimension_x
-    SPEED_FAST = 0.5
-    SPEED_SLOW = 0.2
-    SPEED_LATERAL = 0.5
 
     edge_detected = False
     
@@ -108,6 +108,7 @@ def search_platform(drone:Drone, dimension_y, dimension_x, position_wall_west, h
     else:
         if not edge_detected:
             drone.start_linear_motion(speed_x, speed_y, 0)
+        # détecte les deux côtés de la plateforme
         else:
             if drone.direction == Direction.FORWARD: # ATTENTION BACKWARD PAS PRIS EN COMPTE
                 Platform.START = drone.get_log('stateEstimate.x')

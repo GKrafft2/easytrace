@@ -19,10 +19,11 @@ class states():
 
 def main_back_home(drone:Drone, going_home_line, height):
 
+    SPEED_FORWARD = 0.45
+    SPEED_LATERAL = 0.45
+
     THRESHOLD_LANDING_Y = 0.05
     THRESHOLD_LANDING_X = 0.6
-    SPEED_FORWARD = 0.5
-    SPEED_LATERAL = 0.5
 
     position_estimate = [0, 0]
     arrived = False

@@ -20,7 +20,7 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         avant de retourner au centre avec un controleur P
     """
     
-    SPEED_FORWARD = 0.25            # vitesse de déplacement vers l'avant
+    SPEED_FORWARD = 0.25                # vitesse de déplacement vers l'avant
     SPEED_LATERAL = 0.1                 # vitesse de déplacement sur les côtés
     DIST_CENTER_FRONTAL_ATTACK = 0.05   # distance de déplacement du bord vers l'avant avec vitesse 0.2 mettre 0.04
     DIST_CENTER_LATERAL_ATTACK = 0.22   # distance de déplacement du bord vers la gauche
@@ -78,8 +78,10 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         half_plateform_x = 0
         half_plateform_y = DIST_CENTER_LATERAL_ATTACK
     
-    # exécution uniquement si la fonction est lancée individuellement
+    """
+     exécution uniquement si la fonction est lancée individuellement
     # search_first_edge doit être False si la foncion est exécutée après la recherche de plateforme
+    """
     if search_first_edge:
         # Déplacement rectiligne jusqu'à la détection de la plateforme
         fly = True
@@ -132,9 +134,9 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
         drone.stop_by_hand()
 
         if direction == Direction.FORWARD or direction == Direction.BACKWARD:
-            current_position = drone.get_log('stateEstimate.y')
-        elif direction == Direction.LEFT or direction == Direction.RIGHT:
             current_position = drone.get_log('stateEstimate.x')
+        elif direction == Direction.LEFT or direction == Direction.RIGHT:
+            current_position = drone.get_log('stateEstimate.y')
 
         # si le drone cherche le bord sans le trouver au bout de 50cm,
         # c'est probablement que la plateforme était de l'autre côté
@@ -240,7 +242,6 @@ if __name__ == '__main__':
         drone.start_logs()
 
         drone.take_off(0.2)
-
         landing_procedure(drone, direction=Direction.BACKWARD, height=0.2, search_first_edge=True)
        
         drone.stop_logs()
