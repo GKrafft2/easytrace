@@ -119,10 +119,12 @@ def landing_procedure(drone:Drone, direction, height, search_first_edge=False):
     # cherche le bord 2 de la plateforme
     if direction == Direction.FORWARD or direction == Direction.BACKWARD:
         position_history = drone.get_log('stateEstimate.y')
+        drone.direction = Direction.LEFT
     elif direction == Direction.LEFT or direction == Direction.RIGHT:
         position_history = drone.get_log('stateEstimate.x')
+        drone.direction = Direction.BACKWARD
+
     print("cherche edge 2")
-    drone.direction = Direction.BACKWARD
     fly = True
     # si était au bord dès le début et n'a pas pu détecter la platforme, fait demi tour
     U_turn = False
