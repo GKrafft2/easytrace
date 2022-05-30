@@ -9,15 +9,15 @@ class Arena():
     """ Arena dimension [m] """
     
     # absolute dimention, origin down right
-    WIDTH = 3
+    WIDTH = 3.1
     LENGTH = 5
 
     # Landing and starting region
     REGION_LENGTH = 1.5
 
     # Position (centre) of the plateforme from the origine
-    ORIGIN_X = 0.85      # from the "bottum"
-    ORIGIN_Y = 0.5     # from the right
+    ORIGIN_X = 1      # from the "bottum"
+    ORIGIN_Y = 2     # from the right
 
     # Distance of the drone to the landing region
     START_ZONE_2 = LENGTH - REGION_LENGTH - ORIGIN_X
